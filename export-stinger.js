@@ -25,12 +25,9 @@ function getArg(name, fallback) {
 }
 
 const FPS = parseInt(getArg('--fps', '60'));
-const DURATION_MS = parseInt(getArg('--duration', '3000'));
+let DURATION_MS = parseInt(getArg('--duration', '0')); // 0 = auto-detect from design
 const WIDTH = parseInt(getArg('--width', '2560'));
 const HEIGHT = parseInt(getArg('--height', '1440'));
-
-const TOTAL_FRAMES = Math.ceil((DURATION_MS / 1000) * FPS);
-const FRAME_INTERVAL = 1000 / FPS;
 
 const STINGER_DIR = path.resolve(__dirname, 'bar-stinger-alphacup-vi');
 const STINGER_FILE = path.join(STINGER_DIR, 'stinger-v2-animated.html');
@@ -45,7 +42,6 @@ const OUTPUT_FILE = path.join(__dirname, `stinger-${WIDTH}x${HEIGHT}_${DATE_SUFF
 (async () => {
   console.log('=== BAR Stinger Export ===');
   console.log(`Resolution: ${WIDTH}x${HEIGHT}`);
-  console.log(`FPS: ${FPS} | Duration: ${DURATION_MS}ms | Frames: ${TOTAL_FRAMES}`);
   console.log(`Source: ${STINGER_FILE}`);
 
   // Load design config — find the most recently modified design*.json
@@ -91,6 +87,18 @@ const OUTPUT_FILE = path.join(__dirname, `stinger-${WIDTH}x${HEIGHT}_${DATE_SUFF
     console.log('Design: no design*.json found, using defaults');
     console.log('  Tip: Use "Save Design" in the browser editor to save your settings.');
   }
+  // Resolve duration: CLI flag > design file > default 3000ms
+  if (DURATION_MS === 0) {
+    if (designConfig && designConfig.totalDuration) {
+      DURATION_MS = Math.round(parseFloat(designConfig.totalDuration) * 1000);
+    } else {
+      DURATION_MS = 3000;
+    }
+  }
+  const TOTAL_FRAMES = Math.ceil((DURATION_MS / 1000) * FPS);
+  const FRAME_INTERVAL = 1000 / FPS;
+
+  console.log(`Duration: ${DURATION_MS}ms | FPS: ${FPS} | Frames: ${TOTAL_FRAMES}`);
   console.log('');
 
   // Check source file
@@ -160,47 +168,31 @@ const OUTPUT_FILE = path.join(__dirname, `stinger-${WIDTH}x${HEIGHT}_${DATE_SUFF
     const editor = document.querySelector('.editor-panel');
     if (editor) editor.style.display = 'none';
 
-    // Apply design config if provided
+    // Apply design config if provided — set all editor inputs then let applyAllAnimations() handle it
     if (config) {
       for (const [key, value] of Object.entries(config)) {
         if (key.startsWith('--')) {
+          // CSS custom property
           const input = document.querySelector(`[data-var="${key}"]`);
           const unit = input ? (input.dataset.unit || '') : '';
           document.documentElement.style.setProperty(key, value + unit);
+          if (input) input.value = value;
+        } else {
+          // Timing key (data-key)
+          const input = document.querySelector(`[data-key="${key}"]`);
+          if (input) input.value = value;
         }
       }
+    }
 
-      if (config.glowStart !== undefined || config.glowEnd !== undefined) {
-        const start = parseFloat(config.glowStart || 0.6);
-        const end = parseFloat(config.glowEnd || 2.0);
-        const fadeIn = 0.5;
-        const fadeOut = 0.5;
-        const pulseDelay = start + fadeIn * 0.5;
-        const pulseDur = Math.max(0.3, end - start - fadeOut * 0.5);
+    // Apply all dynamic animations (blades, logo parts, glow, flash, sweep, corners)
+    if (typeof applyAllAnimations === 'function') {
+      applyAllAnimations();
+    }
 
-        const s = document.createElement('style');
-        s.textContent = `
-          @keyframes glowIn {
-            0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
-            100% { opacity: var(--glow-opacity); transform: translate(-50%, -50%) scale(1); }
-          }
-          @keyframes glowPulse {
-            0%   { opacity: var(--glow-opacity); transform: translate(-50%, -50%) scale(1); }
-            40%  { opacity: calc(var(--glow-opacity) * 1.3); transform: translate(-50%, -50%) scale(1.15); }
-            100% { opacity: var(--glow-opacity); transform: translate(-50%, -50%) scale(1); }
-          }
-          @keyframes glowOut {
-            0%   { opacity: var(--glow-opacity); }
-            100% { opacity: 0; }
-          }
-          .shield-glow {
-            animation: glowIn ${fadeIn}s cubic-bezier(0.16, 1, 0.3, 1) ${start}s forwards,
-                       glowPulse ${pulseDur}s ease-in-out ${pulseDelay}s 1 forwards,
-                       glowOut ${fadeOut}s ease-in ${end}s forwards;
-          }
-        `;
-        document.head.appendChild(s);
-      }
+    // Generate particles with current settings
+    if (typeof generateParticles === 'function') {
+      generateParticles(document.getElementById('particles'));
     }
 
     // Collect all animations and pause

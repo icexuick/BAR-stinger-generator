@@ -5,11 +5,13 @@ Animated stinger/transition overlay for the **BAR Alpha Cup VI** livestream. Bui
 ## Preview
 
 The stinger features:
-- Diagonal wipe blades with brushed metal texture
+- Diagonal wipe blades with scanline texture
 - Animated logo build-up (shield, BAR logo, ALPHA, alphaVI, CUP)
 - Shield glow effect
-- Gold particle/spark explosion
-- Light sweep and corner accents
+- Gold particle/spark explosion (resolution-independent)
+- Gold flash, light sweep, and corner accents
+- Full timing control for all animated elements via dual-range sliders
+- Adjustable animation duration (1–8 seconds)
 
 ## Requirements
 
@@ -36,8 +38,8 @@ sudo apt install ffmpeg
 ## Setup
 
 ```bash
-git clone https://github.com/YOUR_USER/BAR-livestream-stinger.git
-cd BAR-livestream-stinger
+git clone https://github.com/icexuick/BAR-stinger-generator.git
+cd BAR-stinger-generator
 npm install
 ```
 
@@ -58,7 +60,7 @@ python -m http.server 8080
 
 - **Replay** — replay the animation
 - **Pause/Play** — freeze the animation at the current frame
-- **Loop** — auto-repeat the animation every 3 seconds
+- **Loop** — auto-repeat the animation
 - **Editor** — open the visual editor panel
 - **Timeline scrubber** — scrub to any point in the animation
 
@@ -72,10 +74,13 @@ The editor panel lets you adjust all parameters in real-time with sliders:
 | **ALPHA Text** | Top position, Width |
 | **Alpha VI (Hero)** | Top position, Width |
 | **CUP Text** | Bottom position, Width |
+| **Logo** | Scale (entire logo assembly) |
 | **Shield** | Scale |
-| **Shield Glow** | Size, Opacity, Start time, End time |
-| **Blade Texture** | Opacity, Scale, Angle, Highlight |
+| **Shield Glow** | Size, Opacity |
+| **Timing** | Duration + dual-range start/end sliders for: Blades, Shield, BAR, ALPHA, Alpha VI, CUP, Glow, Flash, Sweep, Corners, Sparks |
+| **Blade Texture** | Opacity, Gap, Weight, Highlight |
 | **Sparks** | Count, Size, Spread, Duration, Stretch, Deceleration |
+| **Effects** | Flash opacity, Sweep opacity, Corners opacity |
 
 All settings are automatically saved to `localStorage` and persist across browser refreshes.
 
@@ -90,7 +95,7 @@ Place the `design.json` file in the `bar-stinger-alphacup-vi/` folder for the ex
 
 ### 2. Export to WebM
 
-Make sure your live server is **not** required — the export script opens the HTML file directly.
+The export script opens the HTML file directly (no live server needed).
 
 ```bash
 npm run export
@@ -99,10 +104,11 @@ npm run export
 This will:
 1. Open the stinger in a headless Chromium browser at 2560x1440
 2. Apply settings from the latest `design*.json` file
-3. Set the background to transparent
-4. Capture 180 frames (60fps x 3s) as PNG with alpha
-5. Encode to VP9 WebM with alpha channel via FFmpeg
-6. Output: `stinger-2560x1440_YYYYMMDD-HHMMSS.webm`
+3. Auto-detect duration from the design file (or use default 3s)
+4. Set the background to transparent
+5. Capture frames as PNG with alpha at 60fps
+6. Encode to VP9 WebM with alpha channel via FFmpeg
+7. Output: `stinger-2560x1440_YYYYMMDD-HHMMSS.webm`
 
 #### Export Options
 
@@ -111,7 +117,7 @@ node export-stinger.js [options]
 
 Options:
   --fps <number>        Framerate (default: 60)
-  --duration <number>   Duration in ms (default: 3000)
+  --duration <number>   Duration in ms (default: from design.json, or 3000)
   --width <number>      Width in px (default: 2560)
   --height <number>     Height in px (default: 1440)
   --design <path>       Path to a specific design.json file

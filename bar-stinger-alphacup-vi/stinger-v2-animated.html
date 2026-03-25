@@ -23,6 +23,7 @@
     --alpha-vi-width: 90%;
     --cup-bottom: 2%;
     --cup-width: 36%;
+    --logo-scale: 1;
     --shield-scale: 1;
     --glow-size: 55%;
     --glow-opacity: 0.7;
@@ -36,6 +37,9 @@
     --blade-scanline-gap: 3;
     --blade-scanline-weight: 1;
     --blade-highlight: 0.04;
+    --flash-opacity: 0.5;
+    --sweep-opacity: 1;
+    --corner-opacity: 0.35;
   }
 
   body {
@@ -64,15 +68,13 @@
     left: -70%;
     width: 65%;
     transform: skewX(-12deg);
-    animation: bladeIn1 0.4s cubic-bezier(0.7, 0, 0.3, 1) 0s forwards,
-               bladeOut1 0.35s cubic-bezier(0.7, 0, 0.3, 1) 2.2s forwards;
+    /* animation applied via JS for dynamic timing */
   }
   .blade-2 {
     right: -70%;
     width: 65%;
     transform: skewX(-12deg);
-    animation: bladeIn2 0.4s cubic-bezier(0.7, 0, 0.3, 1) 0.05s forwards,
-               bladeOut2 0.35s cubic-bezier(0.7, 0, 0.3, 1) 2.25s forwards;
+    /* animation applied via JS for dynamic timing */
   }
 
   .blade-1::after {
@@ -82,7 +84,7 @@
     width: 4px; height: 100%;
     background: linear-gradient(180deg, transparent 5%, var(--gold-dark) 20%, var(--gold-light) 45%, var(--gold) 55%, var(--gold-dark) 80%, transparent 95%);
     opacity: 0;
-    animation: edgeFade 0.3s ease 0.35s forwards, edgeFadeOut 0.2s ease 2.2s forwards;
+    /* animation applied via JS for dynamic timing */
   }
   .blade-2::after {
     content: '';
@@ -91,7 +93,7 @@
     width: 4px; height: 100%;
     background: linear-gradient(180deg, transparent 5%, var(--gold-dark) 20%, var(--gold-light) 45%, var(--gold) 55%, var(--gold-dark) 80%, transparent 95%);
     opacity: 0;
-    animation: edgeFade 0.3s ease 0.35s forwards, edgeFadeOut 0.2s ease 2.2s forwards;
+    /* animation applied via JS for dynamic timing */
   }
 
   /* Blade texture: scanlines + highlight */
@@ -123,7 +125,7 @@
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     z-index: 20;
-    width: min(50vh, 38vw);
+    width: calc(min(50vh, 38vw) * var(--logo-scale));
     aspect-ratio: 745 / 804;
   }
 
@@ -141,8 +143,7 @@
   .part-shield {
     inset: 0;
     transform: scale(var(--shield-scale));
-    animation: shieldIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards,
-               partOut 0.25s ease-in 2.1s forwards;
+    /* animation applied via JS for dynamic timing */
   }
   .part-shield svg { width: 100%; height: 100%; }
 
@@ -152,8 +153,7 @@
     left: 50%;
     width: var(--bar-width);
     transform: translateX(-50%);
-    animation: barIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.55s forwards,
-               partOut 0.25s ease-in 2.1s forwards;
+    /* animation applied via JS for dynamic timing */
   }
 
   /* 3. ALPHA TEXT */
@@ -162,8 +162,7 @@
     left: 50%;
     width: var(--alpha-width);
     transform: translateX(-50%);
-    animation: alphaIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.72s forwards,
-               partOut 0.25s ease-in 2.1s forwards;
+    /* animation applied via JS for dynamic timing */
   }
 
   /* 4. αVI SYMBOL — the hero element */
@@ -172,8 +171,7 @@
     left: 50%;
     width: var(--alpha-vi-width);
     transform: translateX(-50%);
-    animation: alphaViIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.92s forwards,
-               partOut 0.25s ease-in 2.1s forwards;
+    /* animation applied via JS for dynamic timing */
   }
   .part-alpha-vi img, .part-alpha-vi object {
     filter: drop-shadow(0 0 30px rgba(201, 168, 76, 0.3));
@@ -185,8 +183,7 @@
     left: 50%;
     width: var(--cup-width);
     transform: translateX(-50%);
-    animation: cupIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) 1.12s forwards,
-               partOut 0.25s ease-in 2.1s forwards;
+    /* animation applied via JS for dynamic timing */
   }
 
   /* ===== ELEMENT KEYFRAMES ===== */
@@ -238,13 +235,13 @@
     z-index: 18;
     background: radial-gradient(circle at 50% 50%, var(--gold-bright), var(--gold), transparent 70%);
     opacity: 0;
-    animation: goldFlash 0.5s ease-out 0.9s forwards;
+    /* animation applied via JS for dynamic timing */
     mix-blend-mode: screen;
     pointer-events: none;
   }
   @keyframes goldFlash {
     0%   { opacity: 0; transform: scale(0.5); }
-    15%  { opacity: 0.5; transform: scale(1.1); }
+    15%  { opacity: var(--flash-opacity); transform: scale(1.1); }
     100% { opacity: 0; transform: scale(2); }
   }
 
@@ -257,13 +254,13 @@
     z-index: 22;
     transform: skewX(-15deg);
     opacity: 0;
-    animation: sweepAcross 0.7s ease-in-out 1.2s forwards;
+    /* animation applied via JS for dynamic timing */
     pointer-events: none;
   }
   @keyframes sweepAcross {
     0%   { left: -50%; opacity: 0; }
-    10%  { opacity: 1; }
-    90%  { opacity: 1; }
+    10%  { opacity: var(--sweep-opacity); }
+    90%  { opacity: var(--sweep-opacity); }
     100% { left: 130%; opacity: 0; }
   }
 
@@ -281,16 +278,16 @@
     z-index: 12;
     opacity: 0;
   }
-  .corner-tl, .corner-br { animation: cornerShow 0.3s ease 0.5s forwards, cornerHide 0.2s ease 2.1s forwards; }
-  .corner-tr, .corner-bl { animation: cornerShow 0.3s ease 0.55s forwards, cornerHide 0.2s ease 2.1s forwards; }
+  .corner-tl, .corner-br { /* animation applied via JS for dynamic timing */ }
+  .corner-tr, .corner-bl { /* animation applied via JS for dynamic timing */ }
   .corner-tl { top: 8%; left: 8%; }
   .corner-tr { top: 8%; right: 8%; }
   .corner-bl { bottom: 8%; left: 8%; }
   .corner-br { bottom: 8%; right: 8%; }
   .corner svg { width: min(6vw, 6vh); height: auto; }
 
-  @keyframes cornerShow { 0% { opacity: 0; } 100% { opacity: 0.35; } }
-  @keyframes cornerHide { 0% { opacity: 0.35; } 100% { opacity: 0; } }
+  @keyframes cornerShow { 0% { opacity: 0; } 100% { opacity: var(--corner-opacity); } }
+  @keyframes cornerHide { 0% { opacity: var(--corner-opacity); } 100% { opacity: 0; } }
 
   /* ===== CONTROLS ===== */
   .controls {
@@ -396,6 +393,77 @@
   .editor-panel button.secondary {
     background: rgba(255,255,255,0.1);
     color: #aaa;
+  }
+
+  /* Dual-range slider */
+  .dual-range {
+    position: relative;
+    height: 20px;
+    flex: 1;
+  }
+  .dual-range input[type="range"] {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 20px;
+    margin: 0;
+    pointer-events: none;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    accent-color: var(--gold);
+  }
+  .dual-range input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+  }
+  .dual-range input[type="range"]:last-child::-webkit-slider-runnable-track {
+    background: transparent;
+  }
+  .dual-range input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+    pointer-events: all;
+    margin-top: -5px;
+    border: 2px solid var(--gold-dark);
+  }
+  .dual-range input[type="range"]::-moz-range-track {
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    border: none;
+  }
+  .dual-range input[type="range"]:last-child::-moz-range-track {
+    background: transparent;
+  }
+  .dual-range input[type="range"]::-moz-range-thumb {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+    pointer-events: all;
+    border: 2px solid var(--gold-dark);
+  }
+  .dual-range .track-fill {
+    position: absolute;
+    top: 8px;
+    height: 4px;
+    background: var(--gold-dark);
+    border-radius: 2px;
+    pointer-events: none;
+  }
+  .editor-row.timing-row {
+    margin-bottom: 4px;
+  }
+  .editor-row.timing-row label {
+    width: 65px;
   }
   .editor-panel pre {
     background: rgba(255,255,255,0.05);
@@ -520,6 +588,13 @@
     <span class="value">36%</span>
   </div>
 
+  <div class="section-title">Logo</div>
+  <div class="editor-row">
+    <label>Scale</label>
+    <input type="range" min="0.5" max="2" step="0.01" value="1" data-var="--logo-scale" data-unit="">
+    <span class="value">1</span>
+  </div>
+
   <div class="section-title">Shield</div>
   <div class="editor-row">
     <label>Scale</label>
@@ -538,15 +613,100 @@
     <input type="range" min="0" max="1" step="0.05" value="0.7" data-var="--glow-opacity" data-unit="">
     <span class="value">0.7</span>
   </div>
+
+  <div class="section-title">Timing</div>
   <div class="editor-row">
-    <label>Start</label>
-    <input type="range" min="0" max="2.6" step="0.05" value="0.6" id="glowStart" data-key="glowStart">
-    <span class="value" id="glowStartVal">0.6s</span>
+    <label>Duration</label>
+    <input type="range" min="1" max="8" step="0.1" value="3" data-key="totalDuration">
+    <span class="value">3.0s</span>
   </div>
-  <div class="editor-row">
-    <label>End</label>
-    <input type="range" min="0" max="2.6" step="0.05" value="2.0" id="glowEnd" data-key="glowEnd">
-    <span class="value" id="glowEndVal">2.0s</span>
+  <div class="editor-row timing-row">
+    <label>Blades</label>
+    <div class="dual-range" data-group="blades">
+      <div class="track-fill"></div>
+      <input type="range" min="0" max="2.8" step="0.05" value="0" data-key="bladesStart">
+      <input type="range" min="0" max="2.8" step="0.05" value="2.55" data-key="bladesEnd">
+    </div>
+  </div>
+  <div class="editor-row timing-row">
+    <label>Shield</label>
+    <div class="dual-range" data-group="shield">
+      <div class="track-fill"></div>
+      <input type="range" min="0" max="2.8" step="0.05" value="0.3" data-key="shieldStart">
+      <input type="range" min="0" max="2.8" step="0.05" value="2.35" data-key="shieldEnd">
+    </div>
+  </div>
+  <div class="editor-row timing-row">
+    <label>BAR</label>
+    <div class="dual-range" data-group="bar">
+      <div class="track-fill"></div>
+      <input type="range" min="0" max="2.8" step="0.05" value="0.55" data-key="barStart">
+      <input type="range" min="0" max="2.8" step="0.05" value="2.35" data-key="barEnd">
+    </div>
+  </div>
+  <div class="editor-row timing-row">
+    <label>ALPHA</label>
+    <div class="dual-range" data-group="alpha">
+      <div class="track-fill"></div>
+      <input type="range" min="0" max="2.8" step="0.05" value="0.72" data-key="alphaStart">
+      <input type="range" min="0" max="2.8" step="0.05" value="2.35" data-key="alphaEnd">
+    </div>
+  </div>
+  <div class="editor-row timing-row">
+    <label>Alpha VI</label>
+    <div class="dual-range" data-group="alphaVi">
+      <div class="track-fill"></div>
+      <input type="range" min="0" max="2.8" step="0.05" value="0.92" data-key="alphaViStart">
+      <input type="range" min="0" max="2.8" step="0.05" value="2.35" data-key="alphaViEnd">
+    </div>
+  </div>
+  <div class="editor-row timing-row">
+    <label>CUP</label>
+    <div class="dual-range" data-group="cup">
+      <div class="track-fill"></div>
+      <input type="range" min="0" max="2.8" step="0.05" value="1.12" data-key="cupStart">
+      <input type="range" min="0" max="2.8" step="0.05" value="2.35" data-key="cupEnd">
+    </div>
+  </div>
+  <div class="editor-row timing-row">
+    <label>Glow</label>
+    <div class="dual-range" data-group="glow">
+      <div class="track-fill"></div>
+      <input type="range" min="0" max="2.8" step="0.05" value="0.6" data-key="glowStart">
+      <input type="range" min="0" max="2.8" step="0.05" value="2.0" data-key="glowEnd">
+    </div>
+  </div>
+  <div class="editor-row timing-row">
+    <label>Flash</label>
+    <div class="dual-range" data-group="flash">
+      <div class="track-fill"></div>
+      <input type="range" min="0" max="2.8" step="0.05" value="0.9" data-key="flashStart">
+      <input type="range" min="0" max="2.8" step="0.05" value="1.4" data-key="flashEnd">
+    </div>
+  </div>
+  <div class="editor-row timing-row">
+    <label>Sweep</label>
+    <div class="dual-range" data-group="sweep">
+      <div class="track-fill"></div>
+      <input type="range" min="0" max="2.8" step="0.05" value="1.2" data-key="sweepStart">
+      <input type="range" min="0" max="2.8" step="0.05" value="1.9" data-key="sweepEnd">
+    </div>
+  </div>
+  <div class="editor-row timing-row">
+    <label>Corners</label>
+    <div class="dual-range" data-group="corners">
+      <div class="track-fill"></div>
+      <input type="range" min="0" max="2.8" step="0.05" value="0.5" data-key="cornersStart">
+      <input type="range" min="0" max="2.8" step="0.05" value="2.3" data-key="cornersEnd">
+    </div>
+  </div>
+  <div class="editor-row timing-row">
+    <label>Sparks</label>
+    <div class="dual-range" data-group="sparks">
+      <div class="track-fill"></div>
+      <input type="range" min="0" max="2.8" step="0.05" value="0.9" data-key="sparksStart">
+      <input type="range" min="0" max="2.8" step="0.05" value="1.8" data-key="sparksEnd">
+    </div>
   </div>
 
   <div class="section-title">Blade Texture</div>
@@ -603,6 +763,23 @@
     <span class="value">0.3</span>
   </div>
 
+  <div class="section-title">Effects</div>
+  <div class="editor-row">
+    <label>Flash</label>
+    <input type="range" min="0" max="1" step="0.05" value="0.5" data-var="--flash-opacity" data-unit="">
+    <span class="value">0.5</span>
+  </div>
+  <div class="editor-row">
+    <label>Sweep</label>
+    <input type="range" min="0" max="1" step="0.05" value="1" data-var="--sweep-opacity" data-unit="">
+    <span class="value">1</span>
+  </div>
+  <div class="editor-row">
+    <label>Corners</label>
+    <input type="range" min="0" max="1" step="0.05" value="0.35" data-var="--corner-opacity" data-unit="">
+    <span class="value">0.35</span>
+  </div>
+
   <div class="btn-row">
     <button onclick="resetPositions()">Reset</button>
     <button onclick="copyCSS()">Copy CSS</button>
@@ -615,28 +792,169 @@
 </div>
 
 <script>
-const TOTAL_DURATION = 3000;
+let TOTAL_DURATION = 3000;
 const STORAGE_KEY = 'stinger-v2-editor';
 let looping = false;
 let loopTimer = null;
-let glowStyleEl = null;
+let animStyleEl = null;
 
-/* ===== GLOW ANIMATION ===== */
-function getGlowStart() { return parseFloat(document.getElementById('glowStart').value); }
-function getGlowEnd()   { return parseFloat(document.getElementById('glowEnd').value); }
+/* ===== TIMING HELPERS ===== */
+function getT(key) {
+  const el = document.querySelector(`[data-key="${key}"]`);
+  return el ? parseFloat(el.value) : 0;
+}
 
-function applyGlowAnimation() {
-  const start = getGlowStart();
-  const end = getGlowEnd();
-  const fadeIn = 0.5;
-  const fadeOut = 0.5;
-  const holdDur = Math.max(0, end - start - fadeIn);
-  const pulseDelay = start + fadeIn * 0.5;
-  const pulseDur = Math.max(0.3, end - start - fadeOut * 0.5);
+function getTotalDuration() { return getT('totalDuration'); }
 
-  if (glowStyleEl) glowStyleEl.remove();
-  glowStyleEl = document.createElement('style');
-  glowStyleEl.textContent = `
+function updateDuration() {
+  const dur = getTotalDuration();
+  TOTAL_DURATION = dur * 1000;
+  const maxT = Math.max(0.5, dur - 0.2);
+  // Update all timing slider max values
+  document.querySelectorAll('.dual-range input[type="range"]').forEach(input => {
+    input.max = maxT.toFixed(2);
+    if (parseFloat(input.value) > maxT) input.value = maxT.toFixed(2);
+  });
+  // Update timeline scrubber
+  const timeline = document.getElementById('timeline');
+  if (timeline) timeline.max = Math.round(dur * 1000);
+  // Update loop interval
+  if (looping) {
+    clearInterval(loopTimer);
+    loopTimer = setInterval(replay, TOTAL_DURATION);
+  }
+  // Update duration display
+  const durInput = document.querySelector('[data-key="totalDuration"]');
+  if (durInput && durInput.nextElementSibling) {
+    durInput.nextElementSibling.textContent = dur.toFixed(1) + 's';
+  }
+  // Refresh dual-range fills (max changed)
+  document.querySelectorAll('.dual-range').forEach(container => {
+    const inputs = container.querySelectorAll('input[type="range"]');
+    const fill = container.querySelector('.track-fill');
+    const s = parseFloat(inputs[0].value);
+    const e = parseFloat(inputs[1].value);
+    const min = parseFloat(inputs[0].min);
+    const max = parseFloat(inputs[0].max);
+    fill.style.left = ((s - min) / (max - min)) * 100 + '%';
+    fill.style.width = (((e - min) / (max - min)) - ((s - min) / (max - min))) * 100 + '%';
+  });
+}
+
+// Wire up duration slider
+document.querySelector('[data-key="totalDuration"]').addEventListener('input', function() {
+  updateDuration();
+  applyAllAnimations();
+  saveToStorage();
+});
+
+/* ===== APPLY ALL DYNAMIC ANIMATIONS ===== */
+function applyAllAnimations() {
+  // Read all timing values
+  const t = {
+    bladesStart: getT('bladesStart'), bladesEnd: getT('bladesEnd'),
+    shieldStart: getT('shieldStart'), shieldEnd: getT('shieldEnd'),
+    barStart: getT('barStart'), barEnd: getT('barEnd'),
+    alphaStart: getT('alphaStart'), alphaEnd: getT('alphaEnd'),
+    alphaViStart: getT('alphaViStart'), alphaViEnd: getT('alphaViEnd'),
+    cupStart: getT('cupStart'), cupEnd: getT('cupEnd'),
+    glowStart: getT('glowStart'), glowEnd: getT('glowEnd'),
+    flashStart: getT('flashStart'), flashEnd: getT('flashEnd'),
+    sweepStart: getT('sweepStart'), sweepEnd: getT('sweepEnd'),
+    cornersStart: getT('cornersStart'), cornersEnd: getT('cornersEnd'),
+    sparksStart: getT('sparksStart'), sparksEnd: getT('sparksEnd'),
+  };
+
+  // Blade animation durations
+  const bladeInDur = 0.4;
+  const bladeOutDur = 0.35;
+  const bladeOutDelay = Math.max(t.bladesStart + bladeInDur, t.bladesEnd - bladeOutDur);
+
+  // Edge glow follows blades
+  const edgeDelay = t.bladesStart + bladeInDur - 0.05;
+
+  // Logo part out durations
+  const partOutDur = 0.25;
+
+  // Shield
+  const shieldInDur = 0.35;
+  const shieldOutDelay = Math.max(t.shieldStart + shieldInDur, t.shieldEnd - partOutDur);
+
+  // BAR
+  const barInDur = 0.3;
+  const barOutDelay = Math.max(t.barStart + barInDur, t.barEnd - partOutDur);
+
+  // ALPHA
+  const alphaInDur = 0.3;
+  const alphaOutDelay = Math.max(t.alphaStart + alphaInDur, t.alphaEnd - partOutDur);
+
+  // Alpha VI
+  const alphaViInDur = 0.35;
+  const alphaViOutDelay = Math.max(t.alphaViStart + alphaViInDur, t.alphaViEnd - partOutDur);
+
+  // CUP
+  const cupInDur = 0.3;
+  const cupOutDelay = Math.max(t.cupStart + cupInDur, t.cupEnd - partOutDur);
+
+  // Glow
+  const glowFadeIn = 0.5;
+  const glowFadeOut = 0.5;
+  const glowPulseDelay = t.glowStart + glowFadeIn * 0.5;
+  const glowPulseDur = Math.max(0.3, t.glowEnd - t.glowStart - glowFadeOut * 0.5);
+
+  // Flash
+  const flashDur = Math.max(0.2, t.flashEnd - t.flashStart);
+
+  // Sweep
+  const sweepDur = Math.max(0.2, t.sweepEnd - t.sweepStart);
+
+  // Corners
+  const cornerShowDur = 0.3;
+  const cornerHideDur = 0.2;
+  const cornerHideDelay = Math.max(t.cornersStart + cornerShowDur, t.cornersEnd - cornerHideDur);
+
+  if (animStyleEl) animStyleEl.remove();
+  animStyleEl = document.createElement('style');
+  animStyleEl.textContent = `
+    /* Blades */
+    .blade-1 {
+      animation: bladeIn1 ${bladeInDur}s cubic-bezier(0.7, 0, 0.3, 1) ${t.bladesStart}s forwards,
+                 bladeOut1 ${bladeOutDur}s cubic-bezier(0.7, 0, 0.3, 1) ${bladeOutDelay}s forwards;
+    }
+    .blade-2 {
+      animation: bladeIn2 ${bladeInDur}s cubic-bezier(0.7, 0, 0.3, 1) ${t.bladesStart + 0.05}s forwards,
+                 bladeOut2 ${bladeOutDur}s cubic-bezier(0.7, 0, 0.3, 1) ${bladeOutDelay + 0.05}s forwards;
+    }
+    .blade-1::after {
+      animation: edgeFade 0.3s ease ${edgeDelay}s forwards, edgeFadeOut 0.2s ease ${bladeOutDelay}s forwards;
+    }
+    .blade-2::after {
+      animation: edgeFade 0.3s ease ${edgeDelay}s forwards, edgeFadeOut 0.2s ease ${bladeOutDelay}s forwards;
+    }
+
+    /* Logo parts */
+    .part-shield {
+      animation: shieldIn ${shieldInDur}s cubic-bezier(0.16, 1, 0.3, 1) ${t.shieldStart}s forwards,
+                 partOut ${partOutDur}s ease-in ${shieldOutDelay}s forwards;
+    }
+    .part-bar {
+      animation: barIn ${barInDur}s cubic-bezier(0.16, 1, 0.3, 1) ${t.barStart}s forwards,
+                 partOut ${partOutDur}s ease-in ${barOutDelay}s forwards;
+    }
+    .part-alpha {
+      animation: alphaIn ${alphaInDur}s cubic-bezier(0.16, 1, 0.3, 1) ${t.alphaStart}s forwards,
+                 partOut ${partOutDur}s ease-in ${alphaOutDelay}s forwards;
+    }
+    .part-alpha-vi {
+      animation: alphaViIn ${alphaViInDur}s cubic-bezier(0.16, 1, 0.3, 1) ${t.alphaViStart}s forwards,
+                 partOut ${partOutDur}s ease-in ${alphaViOutDelay}s forwards;
+    }
+    .part-cup {
+      animation: cupIn ${cupInDur}s cubic-bezier(0.16, 1, 0.3, 1) ${t.cupStart}s forwards,
+                 partOut ${partOutDur}s ease-in ${cupOutDelay}s forwards;
+    }
+
+    /* Shield Glow */
     @keyframes glowIn {
       0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
       100% { opacity: var(--glow-opacity); transform: translate(-50%, -50%) scale(1); }
@@ -651,29 +969,74 @@ function applyGlowAnimation() {
       100% { opacity: 0; }
     }
     .shield-glow {
-      animation: glowIn ${fadeIn}s cubic-bezier(0.16, 1, 0.3, 1) ${start}s forwards,
-                 glowPulse ${pulseDur}s ease-in-out ${pulseDelay}s 1 forwards,
-                 glowOut ${fadeOut}s ease-in ${end}s forwards;
+      animation: glowIn ${glowFadeIn}s cubic-bezier(0.16, 1, 0.3, 1) ${t.glowStart}s forwards,
+                 glowPulse ${glowPulseDur}s ease-in-out ${glowPulseDelay}s 1 forwards,
+                 glowOut ${glowFadeOut}s ease-in ${t.glowEnd}s forwards;
+    }
+
+    /* Gold Flash */
+    .gold-flash {
+      animation: goldFlash ${flashDur}s ease-out ${t.flashStart}s forwards;
+    }
+
+    /* Sweep */
+    .sweep {
+      animation: sweepAcross ${sweepDur}s ease-in-out ${t.sweepStart}s forwards;
+    }
+
+    /* Corners */
+    .corner-tl, .corner-br {
+      animation: cornerShow ${cornerShowDur}s ease ${t.cornersStart}s forwards,
+                 cornerHide ${cornerHideDur}s ease ${cornerHideDelay}s forwards;
+    }
+    .corner-tr, .corner-bl {
+      animation: cornerShow ${cornerShowDur}s ease ${t.cornersStart + 0.05}s forwards,
+                 cornerHide ${cornerHideDur}s ease ${cornerHideDelay}s forwards;
     }
   `;
-  document.head.appendChild(glowStyleEl);
+  document.head.appendChild(animStyleEl);
 }
 
-function updateGlowSliders() {
-  document.getElementById('glowStartVal').textContent = getGlowStart().toFixed(2) + 's';
-  document.getElementById('glowEndVal').textContent = getGlowEnd().toFixed(2) + 's';
-  applyGlowAnimation();
-  saveToStorage();
-}
+/* ===== DUAL-RANGE SLIDER LOGIC ===== */
+function initDualRanges() {
+  document.querySelectorAll('.dual-range').forEach(container => {
+    const inputs = container.querySelectorAll('input[type="range"]');
+    const fill = container.querySelector('.track-fill');
+    const startInput = inputs[0];
+    const endInput = inputs[1];
 
-document.getElementById('glowStart').addEventListener('input', function() {
-  if (parseFloat(this.value) > getGlowEnd()) this.value = getGlowEnd();
-  updateGlowSliders();
-});
-document.getElementById('glowEnd').addEventListener('input', function() {
-  if (parseFloat(this.value) < getGlowStart()) this.value = getGlowStart();
-  updateGlowSliders();
-});
+    function updateFill() {
+      const min = parseFloat(startInput.min);
+      const max = parseFloat(startInput.max);
+      const s = parseFloat(startInput.value);
+      const e = parseFloat(endInput.value);
+      const leftPct = ((s - min) / (max - min)) * 100;
+      const rightPct = ((e - min) / (max - min)) * 100;
+      fill.style.left = leftPct + '%';
+      fill.style.width = (rightPct - leftPct) + '%';
+    }
+
+    startInput.addEventListener('input', () => {
+      if (parseFloat(startInput.value) > parseFloat(endInput.value)) {
+        startInput.value = endInput.value;
+      }
+      updateFill();
+      applyAllAnimations();
+      saveToStorage();
+    });
+
+    endInput.addEventListener('input', () => {
+      if (parseFloat(endInput.value) < parseFloat(startInput.value)) {
+        endInput.value = startInput.value;
+      }
+      updateFill();
+      applyAllAnimations();
+      saveToStorage();
+    });
+
+    updateFill();
+  });
+}
 
 /* ===== PARTICLES ===== */
 function getParticleSettings() {
@@ -691,14 +1054,17 @@ function getParticleSettings() {
 function generateParticles(container) {
   container.innerHTML = '';
   const cfg = getParticleSettings();
+  // Scale sparks relative to viewport so they look the same at any resolution
+  const vScale = window.innerHeight / 900;
   for (let i = 0; i < cfg.count; i++) {
     const p = document.createElement('div');
     const angle = (Math.PI * 2 / cfg.count) * i + (Math.random() - 0.5) * 0.6;
-    const dist = (80 + Math.random() * 350) * cfg.spreadMul;
+    const dist = (80 + Math.random() * 350) * cfg.spreadMul * vScale;
     const dx = Math.cos(angle) * dist, dy = Math.sin(angle) * dist;
     const dur = (0.4 + Math.random() * 0.5) * cfg.durMul;
-    const delay = 0.9 + Math.random() * 0.15;
-    const size = (2 + Math.random() * 5) * cfg.sizeMul;
+    const sparkStart = getT('sparksStart');
+    const delay = sparkStart + Math.random() * 0.15;
+    const size = (2 + Math.random() * 5) * cfg.sizeMul * vScale;
     const angleDeg = angle * (180 / Math.PI);
 
     // Stretch: width is elongated along movement direction, height stays as base size
@@ -733,7 +1099,7 @@ function generateParticles(container) {
 
 /* ===== REPLAY / LOOP ===== */
 function replay() {
-  applyGlowAnimation();
+  applyAllAnimations();
   const s = document.getElementById('stinger'), c = s.cloneNode(true);
   s.parentNode.replaceChild(c, s);
   requestAnimationFrame(() => generateParticles(c.querySelector('.particles')));
@@ -834,9 +1200,17 @@ function loadFromStorage() {
         }
       }
     });
-    // update glow timing displays
-    document.getElementById('glowStartVal').textContent = parseFloat(document.getElementById('glowStart').value).toFixed(2) + 's';
-    document.getElementById('glowEndVal').textContent = parseFloat(document.getElementById('glowEnd').value).toFixed(2) + 's';
+    // update dual-range fills
+    document.querySelectorAll('.dual-range').forEach(container => {
+      const inputs = container.querySelectorAll('input[type="range"]');
+      const fill = container.querySelector('.track-fill');
+      const s = parseFloat(inputs[0].value);
+      const e = parseFloat(inputs[1].value);
+      const min = parseFloat(inputs[0].min);
+      const max = parseFloat(inputs[0].max);
+      fill.style.left = ((s - min) / (max - min)) * 100 + '%';
+      fill.style.width = (((e - min) / (max - min)) * 100 - ((s - min) / (max - min)) * 100) + '%';
+    });
   } catch(e) {}
 }
 
@@ -869,9 +1243,19 @@ function resetPositions() {
       }
     }
   });
-  document.getElementById('glowStartVal').textContent = '0.60s';
-  document.getElementById('glowEndVal').textContent = '2.00s';
-  applyGlowAnimation();
+  updateDuration();
+  // Update dual-range fills
+  document.querySelectorAll('.dual-range').forEach(container => {
+    const inputs = container.querySelectorAll('input[type="range"]');
+    const fill = container.querySelector('.track-fill');
+    const s = parseFloat(inputs[0].value);
+    const e = parseFloat(inputs[1].value);
+    const min = parseFloat(inputs[0].min);
+    const max = parseFloat(inputs[0].max);
+    fill.style.left = ((s - min) / (max - min)) * 100 + '%';
+    fill.style.width = (((e - min) / (max - min)) * 100 - ((s - min) / (max - min)) * 100) + '%';
+  });
+  applyAllAnimations();
 }
 
 function copyCSS() {
@@ -916,9 +1300,19 @@ function applyDesignData(data) {
       }
     }
   });
-  document.getElementById('glowStartVal').textContent = parseFloat(document.getElementById('glowStart').value).toFixed(2) + 's';
-  document.getElementById('glowEndVal').textContent = parseFloat(document.getElementById('glowEnd').value).toFixed(2) + 's';
-  applyGlowAnimation();
+  updateDuration();
+  // Update dual-range fills
+  document.querySelectorAll('.dual-range').forEach(container => {
+    const inputs = container.querySelectorAll('input[type="range"]');
+    const fill = container.querySelector('.track-fill');
+    const s = parseFloat(inputs[0].value);
+    const e = parseFloat(inputs[1].value);
+    const min = parseFloat(inputs[0].min);
+    const max = parseFloat(inputs[0].max);
+    fill.style.left = ((s - min) / (max - min)) * 100 + '%';
+    fill.style.width = (((e - min) / (max - min)) * 100 - ((s - min) / (max - min)) * 100) + '%';
+  });
+  applyAllAnimations();
 }
 
 function saveDesignFile() {
@@ -1006,7 +1400,9 @@ async function tryLoadLatestDesign() {
   } else {
     await tryLoadLatestDesign();
   }
-  applyGlowAnimation();
+  updateDuration();
+  initDualRanges();
+  applyAllAnimations();
   generateParticles(document.getElementById('particles'));
 })();
 </script>
