@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BAR Alpha Cup VI — Stinger V1 (Simple)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #e8d48a;
+    --gold-bright: #fff1c4;
+    --gold-dark: #8a6d2b;
+    --panel-bg: #161614;
+  }
+
+  body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .stinger {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  /* ===== DIAGONAL WIPE BLADES ===== */
+  .blade {
+    position: absolute;
+    top: -10%;
+    height: 120%;
+    z-index: 8;
+    background: var(--panel-bg);
+  }
+
+  .blade-1 {
+    left: -70%;
+    width: 65%;
+    transform: skewX(-12deg);
+    animation: bladeIn1 0.4s cubic-bezier(0.7, 0, 0.3, 1) 0s forwards,
+               bladeOut1 0.35s cubic-bezier(0.7, 0, 0.3, 1) 1.5s forwards;
+  }
+  .blade-2 {
+    right: -70%;
+    width: 65%;
+    transform: skewX(-12deg);
+    animation: bladeIn2 0.4s cubic-bezier(0.7, 0, 0.3, 1) 0.05s forwards,
+               bladeOut2 0.35s cubic-bezier(0.7, 0, 0.3, 1) 1.55s forwards;
+  }
+
+  .blade-1::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(180deg, transparent 5%, var(--gold-dark) 20%, var(--gold-light) 45%, var(--gold) 55%, var(--gold-dark) 80%, transparent 95%);
+    opacity: 0;
+    animation: edgeFade 0.3s ease 0.35s forwards, edgeFadeOut 0.2s ease 1.5s forwards;
+  }
+  .blade-2::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(180deg, transparent 5%, var(--gold-dark) 20%, var(--gold-light) 45%, var(--gold) 55%, var(--gold-dark) 80%, transparent 95%);
+    opacity: 0;
+    animation: edgeFade 0.3s ease 0.35s forwards, edgeFadeOut 0.2s ease 1.5s forwards;
+  }
+
+  .blade::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.02) 2px, rgba(255,255,255,0.02) 3px),
+      radial-gradient(ellipse at 50% 40%, rgba(255,255,255,0.04), transparent 70%);
+  }
+
+  @keyframes bladeIn1  { 0% { left: -70%; }  100% { left: -8%; } }
+  @keyframes bladeIn2  { 0% { right: -70%; } 100% { right: -8%; } }
+  @keyframes bladeOut1 { 0% { left: -8%; }   100% { left: -70%; } }
+  @keyframes bladeOut2 { 0% { right: -8%; }  100% { right: -70%; } }
+  @keyframes edgeFade    { 0% { opacity: 0; } 100% { opacity: 0.9; } }
+  @keyframes edgeFadeOut { 0% { opacity: 0.9; } 100% { opacity: 0; } }
+
+  /* ===== LOGO ===== */
+  .logo-wrap {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    opacity: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation:
+      logoIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.32s forwards,
+      logoHold 0.7s ease 0.77s forwards,
+      logoOut 0.25s ease-in 1.45s forwards;
+  }
+
+  .logo-wrap img {
+    width: min(42vh, 42vw);
+    height: auto;
+    filter:
+      drop-shadow(0 0 40px rgba(201, 168, 76, 0.5))
+      drop-shadow(0 0 80px rgba(201, 168, 76, 0.2))
+      drop-shadow(0 15px 30px rgba(0, 0, 0, 0.7));
+  }
+
+  @keyframes logoIn {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    100% { opacity: 1; transform: translate(-50%, -50%) scale(1.04); }
+  }
+  @keyframes logoHold {
+    0%   { transform: translate(-50%, -50%) scale(1.04); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+  }
+  @keyframes logoOut {
+    0%   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.12); }
+  }
+
+  /* ===== GOLD FLASH ===== */
+  .gold-flash {
+    position: absolute;
+    inset: 0;
+    z-index: 18;
+    background: radial-gradient(circle at 50% 50%, var(--gold-bright), var(--gold), transparent 70%);
+    opacity: 0;
+    animation: goldFlash 0.5s ease-out 0.3s forwards;
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+  @keyframes goldFlash {
+    0%   { opacity: 0; transform: scale(0.5); }
+    15%  { opacity: 0.6; transform: scale(1.1); }
+    100% { opacity: 0; transform: scale(2); }
+  }
+
+  /* ===== LIGHT SWEEP ===== */
+  .sweep {
+    position: absolute;
+    top: 0; left: -50%;
+    width: 35%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,248,225,0.08), rgba(255,255,255,0.12), rgba(255,248,225,0.08), transparent);
+    z-index: 22;
+    transform: skewX(-15deg);
+    opacity: 0;
+    animation: sweepAcross 0.7s ease-in-out 0.55s forwards;
+    pointer-events: none;
+  }
+  @keyframes sweepAcross {
+    0%   { left: -50%; opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { left: 130%; opacity: 0; }
+  }
+
+  /* ===== PARTICLES ===== */
+  .particles {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    pointer-events: none;
+  }
+
+  /* ===== CORNER ACCENTS ===== */
+  .corner {
+    position: absolute;
+    z-index: 12;
+    opacity: 0;
+  }
+  .corner-tl, .corner-br { animation: cornerShow 0.3s ease 0.4s forwards, cornerHide 0.2s ease 1.45s forwards; }
+  .corner-tr, .corner-bl { animation: cornerShow 0.3s ease 0.45s forwards, cornerHide 0.2s ease 1.45s forwards; }
+
+  .corner-tl { top: 8%; left: 8%; }
+  .corner-tr { top: 8%; right: 8%; }
+  .corner-bl { bottom: 8%; left: 8%; }
+  .corner-br { bottom: 8%; right: 8%; }
+  .corner svg { width: min(6vw, 6vh); height: auto; }
+
+  @keyframes cornerShow { 0% { opacity: 0; } 100% { opacity: 0.35; } }
+  @keyframes cornerHide { 0% { opacity: 0.35; } 100% { opacity: 0; } }
+
+  /* ===== CONTROLS ===== */
+  .controls {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    background: rgba(0,0,0,0.9);
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: 8px;
+    padding: 10px 24px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    backdrop-filter: blur(10px);
+  }
+  .controls button {
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    border: none; color: #1a1a18;
+    padding: 8px 24px; border-radius: 4px;
+    cursor: pointer; font-weight: 700; font-size: 14px;
+  }
+  .controls button:hover { filter: brightness(1.2); }
+  .controls span { color: #777; font-size: 12px; }
+  .controls .title { color: var(--gold); font-size: 13px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="stinger" id="stinger">
+  <div class="blade blade-1"></div>
+  <div class="blade blade-2"></div>
+  <div class="gold-flash"></div>
+  <div class="logo-wrap" id="logo">
+    <img src="assets/logo-full.png" alt="BAR Alpha Cup VI">
+  </div>
+  <div class="particles" id="particles"></div>
+  <div class="sweep"></div>
+  <div class="corner corner-tl"><svg viewBox="0 0 60 60"><path d="M0 0 L60 0 L60 4 L4 4 L4 60 L0 60 Z" fill="rgba(201,168,76,0.6)"/></svg></div>
+  <div class="corner corner-tr"><svg viewBox="0 0 60 60"><path d="M60 0 L0 0 L0 4 L56 4 L56 60 L60 60 Z" fill="rgba(201,168,76,0.6)"/></svg></div>
+  <div class="corner corner-bl"><svg viewBox="0 0 60 60"><path d="M0 60 L60 60 L60 56 L4 56 L4 0 L0 0 Z" fill="rgba(201,168,76,0.6)"/></svg></div>
+  <div class="corner corner-br"><svg viewBox="0 0 60 60"><path d="M60 60 L0 60 L0 56 L56 56 L56 0 L60 0 Z" fill="rgba(201,168,76,0.6)"/></svg></div>
+</div>
+
+<div class="controls">
+  <span class="title">V1 — Simple</span>
+  <button onclick="replay()">&#9654; Replay</button>
+  <span>~1.9s</span>
+</div>
+
+<script>
+function generateParticles(container) {
+  container.innerHTML = '';
+  for (let i = 0; i < 50; i++) {
+    const p = document.createElement('div');
+    const angle = (Math.PI * 2 / 50) * i + (Math.random() - 0.5) * 0.6;
+    const dist = 80 + Math.random() * 350;
+    const dx = Math.cos(angle) * dist, dy = Math.sin(angle) * dist;
+    const dur = 0.4 + Math.random() * 0.5;
+    const delay = 0.3 + Math.random() * 0.15;
+    const size = 2 + Math.random() * 5;
+    p.style.cssText = `position:absolute;top:50%;left:50%;width:${size}px;height:${size}px;background:rgba(232,212,138,${0.5+Math.random()*0.5});border-radius:50%;opacity:0;box-shadow:0 0 ${size*2}px rgba(201,168,76,0.6),0 0 ${size*4}px rgba(201,168,76,0.2);`;
+    const kf = `p${Date.now()}_${i}`;
+    const s = document.createElement('style');
+    s.textContent = `@keyframes ${kf}{0%{opacity:0;transform:translate(0,0) scale(0)}15%{opacity:1;transform:translate(${dx*.15}px,${dy*.15}px) scale(1.2)}100%{opacity:0;transform:translate(${dx}px,${dy}px) scale(0)}}`;
+    document.head.appendChild(s);
+    p.style.animation = `${kf} ${dur}s ease-out ${delay}s forwards`;
+    container.appendChild(p);
+  }
+}
+
+function replay() {
+  const s = document.getElementById('stinger'), c = s.cloneNode(true);
+  s.parentNode.replaceChild(c, s);
+  requestAnimationFrame(() => generateParticles(c.querySelector('.particles')));
+}
+
+generateParticles(document.getElementById('particles'));
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "--bar-top": "1",
+  "--bar-width": "26",
+  "--alpha-top": "16",
+  "--alpha-width": "55",
+  "--alpha-vi-top": "27.5",
+  "--alpha-vi-width": "97",
+  "--cup-bottom": "16.5",
+  "--cup-width": "27",
+  "--shield-scale": "0.87",
+  "--glow-size": "55",
+  "--glow-opacity": "0.7",
+  "glowStart": "0.45",
+  "glowEnd": "1.1"
+}

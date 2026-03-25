@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BAR Alpha Cup VI — Stinger V2 (Animated Build)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #e8d48a;
+    --gold-bright: #fff1c4;
+    --gold-dark: #8a6d2b;
+    --panel-bg: #161614;
+
+    /* Editable positions */
+    --bar-top: 1%;
+    --bar-width: 26%;
+    --alpha-top: 16%;
+    --alpha-width: 55%;
+    --alpha-vi-top: 26%;
+    --alpha-vi-width: 90%;
+    --cup-bottom: 2%;
+    --cup-width: 36%;
+    --shield-scale: 1;
+    --glow-size: 55%;
+    --glow-opacity: 0.7;
+    --spark-count: 50;
+    --spark-size: 1;
+    --spark-spread: 1;
+    --spark-duration: 1;
+    --spark-stretch: 1;
+    --spark-decel: 0.3;
+    --blade-texture-opacity: 1;
+    --blade-scanline-gap: 3;
+    --blade-scanline-weight: 1;
+    --blade-highlight: 0.04;
+  }
+
+  body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .stinger {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  /* ===== DIAGONAL WIPE BLADES ===== */
+  .blade {
+    position: absolute;
+    top: -10%;
+    height: 120%;
+    z-index: 8;
+    background: var(--panel-bg);
+  }
+
+  .blade-1 {
+    left: -70%;
+    width: 65%;
+    transform: skewX(-12deg);
+    animation: bladeIn1 0.4s cubic-bezier(0.7, 0, 0.3, 1) 0s forwards,
+               bladeOut1 0.35s cubic-bezier(0.7, 0, 0.3, 1) 2.2s forwards;
+  }
+  .blade-2 {
+    right: -70%;
+    width: 65%;
+    transform: skewX(-12deg);
+    animation: bladeIn2 0.4s cubic-bezier(0.7, 0, 0.3, 1) 0.05s forwards,
+               bladeOut2 0.35s cubic-bezier(0.7, 0, 0.3, 1) 2.25s forwards;
+  }
+
+  .blade-1::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(180deg, transparent 5%, var(--gold-dark) 20%, var(--gold-light) 45%, var(--gold) 55%, var(--gold-dark) 80%, transparent 95%);
+    opacity: 0;
+    animation: edgeFade 0.3s ease 0.35s forwards, edgeFadeOut 0.2s ease 2.2s forwards;
+  }
+  .blade-2::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(180deg, transparent 5%, var(--gold-dark) 20%, var(--gold-light) 45%, var(--gold) 55%, var(--gold-dark) 80%, transparent 95%);
+    opacity: 0;
+    animation: edgeFade 0.3s ease 0.35s forwards, edgeFadeOut 0.2s ease 2.2s forwards;
+  }
+
+  /* Blade texture: scanlines + highlight */
+  .blade::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: var(--blade-texture-opacity);
+    background:
+      repeating-linear-gradient(0deg,
+        transparent,
+        transparent calc(var(--blade-scanline-gap) * 1px),
+        rgba(255,255,255,0.02) calc(var(--blade-scanline-gap) * 1px),
+        rgba(255,255,255,0.02) calc((var(--blade-scanline-gap) + var(--blade-scanline-weight)) * 1px)
+      ),
+      radial-gradient(ellipse at 50% 40%, rgba(255,255,255, var(--blade-highlight)), transparent 70%);
+  }
+
+  @keyframes bladeIn1  { 0% { left: -70%; }  100% { left: -8%; } }
+  @keyframes bladeIn2  { 0% { right: -70%; } 100% { right: -8%; } }
+  @keyframes bladeOut1 { 0% { left: -8%; }   100% { left: -70%; } }
+  @keyframes bladeOut2 { 0% { right: -8%; }  100% { right: -70%; } }
+  @keyframes edgeFade    { 0% { opacity: 0; } 100% { opacity: 0.9; } }
+  @keyframes edgeFadeOut { 0% { opacity: 0.9; } 100% { opacity: 0; } }
+
+  /* ===== LOGO ASSEMBLY ===== */
+  .logo-assembly {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    width: min(50vh, 38vw);
+    aspect-ratio: 745 / 804;
+  }
+
+  .logo-part {
+    position: absolute;
+    opacity: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .logo-part img, .logo-part svg { width: 100%; height: auto; display: block; }
+
+  /* 1. SHIELD */
+  .part-shield {
+    inset: 0;
+    transform: scale(var(--shield-scale));
+    animation: shieldIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards,
+               partOut 0.25s ease-in 2.1s forwards;
+  }
+  .part-shield svg { width: 100%; height: 100%; }
+
+  /* 2. BAR LOGO */
+  .part-bar {
+    top: var(--bar-top);
+    left: 50%;
+    width: var(--bar-width);
+    transform: translateX(-50%);
+    animation: barIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.55s forwards,
+               partOut 0.25s ease-in 2.1s forwards;
+  }
+
+  /* 3. ALPHA TEXT */
+  .part-alpha {
+    top: var(--alpha-top);
+    left: 50%;
+    width: var(--alpha-width);
+    transform: translateX(-50%);
+    animation: alphaIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.72s forwards,
+               partOut 0.25s ease-in 2.1s forwards;
+  }
+
+  /* 4. αVI SYMBOL — the hero element */
+  .part-alpha-vi {
+    top: var(--alpha-vi-top);
+    left: 50%;
+    width: var(--alpha-vi-width);
+    transform: translateX(-50%);
+    animation: alphaViIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.92s forwards,
+               partOut 0.25s ease-in 2.1s forwards;
+  }
+  .part-alpha-vi img, .part-alpha-vi object {
+    filter: drop-shadow(0 0 30px rgba(201, 168, 76, 0.3));
+  }
+
+  /* 5. CUP TEXT */
+  .part-cup {
+    bottom: var(--cup-bottom);
+    left: 50%;
+    width: var(--cup-width);
+    transform: translateX(-50%);
+    animation: cupIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) 1.12s forwards,
+               partOut 0.25s ease-in 2.1s forwards;
+  }
+
+  /* ===== ELEMENT KEYFRAMES ===== */
+  @keyframes shieldIn {
+    0%   { opacity: 0; transform: scale(calc(var(--shield-scale) * 0.5)); }
+    100% { opacity: 1; transform: scale(var(--shield-scale)); }
+  }
+  @keyframes barIn {
+    0%   { opacity: 0; transform: translateX(-50%) translateY(-30px); }
+    100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+  @keyframes alphaIn {
+    0%   { opacity: 0; transform: translateX(-50%) translateX(-40px); }
+    100% { opacity: 1; transform: translateX(-50%) translateX(0); }
+  }
+  @keyframes alphaViIn {
+    0%   { opacity: 0; transform: translateX(-50%) scale(0.6); }
+    60%  { opacity: 1; transform: translateX(-50%) scale(1.06); }
+    100% { opacity: 1; transform: translateX(-50%) scale(1); }
+  }
+  @keyframes cupIn {
+    0%   { opacity: 0; transform: translateX(-50%) translateY(25px); }
+    100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+  @keyframes partOut {
+    0%   { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  /* ===== SHIELD GLOW ===== */
+  .shield-glow {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: var(--glow-size);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(240,230,200,0.45) 20%, rgba(201,168,76,0.15) 40%, rgba(30,25,10,0.08) 60%, transparent 72%);
+    opacity: 0;
+    z-index: 10;
+    pointer-events: none;
+    /* animation applied via JS for dynamic timing */
+  }
+
+  /* ===== GOLD FLASH ===== */
+  .gold-flash {
+    position: absolute;
+    inset: 0;
+    z-index: 18;
+    background: radial-gradient(circle at 50% 50%, var(--gold-bright), var(--gold), transparent 70%);
+    opacity: 0;
+    animation: goldFlash 0.5s ease-out 0.9s forwards;
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+  @keyframes goldFlash {
+    0%   { opacity: 0; transform: scale(0.5); }
+    15%  { opacity: 0.5; transform: scale(1.1); }
+    100% { opacity: 0; transform: scale(2); }
+  }
+
+  /* ===== LIGHT SWEEP ===== */
+  .sweep {
+    position: absolute;
+    top: 0; left: -50%;
+    width: 35%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,248,225,0.08), rgba(255,255,255,0.12), rgba(255,248,225,0.08), transparent);
+    z-index: 22;
+    transform: skewX(-15deg);
+    opacity: 0;
+    animation: sweepAcross 0.7s ease-in-out 1.2s forwards;
+    pointer-events: none;
+  }
+  @keyframes sweepAcross {
+    0%   { left: -50%; opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { left: 130%; opacity: 0; }
+  }
+
+  /* ===== PARTICLES ===== */
+  .particles {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    pointer-events: none;
+  }
+
+  /* ===== CORNER ACCENTS ===== */
+  .corner {
+    position: absolute;
+    z-index: 12;
+    opacity: 0;
+  }
+  .corner-tl, .corner-br { animation: cornerShow 0.3s ease 0.5s forwards, cornerHide 0.2s ease 2.1s forwards; }
+  .corner-tr, .corner-bl { animation: cornerShow 0.3s ease 0.55s forwards, cornerHide 0.2s ease 2.1s forwards; }
+  .corner-tl { top: 8%; left: 8%; }
+  .corner-tr { top: 8%; right: 8%; }
+  .corner-bl { bottom: 8%; left: 8%; }
+  .corner-br { bottom: 8%; right: 8%; }
+  .corner svg { width: min(6vw, 6vh); height: auto; }
+
+  @keyframes cornerShow { 0% { opacity: 0; } 100% { opacity: 0.35; } }
+  @keyframes cornerHide { 0% { opacity: 0.35; } 100% { opacity: 0; } }
+
+  /* ===== CONTROLS ===== */
+  .controls {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    background: rgba(0,0,0,0.9);
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: 8px;
+    padding: 10px 24px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    backdrop-filter: blur(10px);
+  }
+  .controls button {
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    border: none; color: #1a1a18;
+    padding: 8px 24px; border-radius: 4px;
+    cursor: pointer; font-weight: 700; font-size: 14px;
+  }
+  .controls button:hover { filter: brightness(1.2); }
+  .controls button.active { background: linear-gradient(135deg, #8a2b2b, #c94c4c); color: #fff; }
+  .controls span { color: #777; font-size: 12px; }
+  .controls .title { color: var(--gold); font-size: 13px; font-weight: 600; }
+
+  /* ===== EDITOR PANEL ===== */
+  .editor-panel {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 9999;
+    background: rgba(0,0,0,0.92);
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: 8px;
+    padding: 16px;
+    backdrop-filter: blur(10px);
+    width: 280px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: none;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .editor-panel.open { display: block; }
+  .editor-panel h3 {
+    color: var(--gold);
+    font-size: 13px;
+    margin: 0 0 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .editor-panel .section-title {
+    color: var(--gold-light);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 14px 0 6px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(201,168,76,0.15);
+  }
+  .editor-panel .section-title:first-of-type { border-top: none; margin-top: 4px; padding-top: 0; }
+  .editor-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .editor-row label {
+    color: #aaa;
+    font-size: 11px;
+    width: 55px;
+    flex-shrink: 0;
+  }
+  .editor-row input[type="range"] {
+    flex: 1;
+    accent-color: var(--gold);
+    height: 4px;
+  }
+  .editor-row .value {
+    color: var(--gold-light);
+    font-size: 11px;
+    width: 38px;
+    text-align: right;
+    font-family: monospace;
+  }
+  .editor-panel .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(201,168,76,0.15);
+  }
+  .editor-panel button {
+    flex: 1;
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    border: none; color: #1a1a18;
+    padding: 6px 12px; border-radius: 4px;
+    cursor: pointer; font-weight: 700; font-size: 11px;
+  }
+  .editor-panel button:hover { filter: brightness(1.2); }
+  .editor-panel button.secondary {
+    background: rgba(255,255,255,0.1);
+    color: #aaa;
+  }
+  .editor-panel pre {
+    background: rgba(255,255,255,0.05);
+    color: var(--gold-light);
+    font-size: 10px;
+    padding: 8px;
+    border-radius: 4px;
+    margin-top: 8px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 120px;
+    overflow-y: auto;
+    display: none;
+  }
+  .editor-panel pre.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="stinger" id="stinger">
+  <div class="blade blade-1"></div>
+  <div class="blade blade-2"></div>
+  <div class="gold-flash"></div>
+
+  <div class="shield-glow"></div>
+
+  <div class="logo-assembly">
+    <!-- 1. Shield -->
+    <div class="logo-part part-shield">
+      <object data="assets/shield.svg" type="image/svg+xml" style="width:100%;height:100%;pointer-events:none;"></object>
+    </div>
+
+    <!-- 2. BAR logo -->
+    <div class="logo-part part-bar">
+      <object data="assets/bar-logo.svg" type="image/svg+xml" style="width:100%;height:auto;pointer-events:none;"></object>
+    </div>
+
+    <!-- 3. ALPHA text -->
+    <div class="logo-part part-alpha">
+      <object data="assets/alpha.svg" type="image/svg+xml" style="width:100%;height:auto;pointer-events:none;"></object>
+    </div>
+
+    <!-- 4. αVI symbol (the hero) -->
+    <div class="logo-part part-alpha-vi">
+      <object data="assets/alpha-vi.svg" type="image/svg+xml" style="width:100%;height:auto;pointer-events:none;"></object>
+    </div>
+
+    <!-- 5. CUP text -->
+    <div class="logo-part part-cup">
+      <object data="assets/cup.svg" type="image/svg+xml" style="width:100%;height:auto;pointer-events:none;"></object>
+    </div>
+  </div>
+
+  <div class="particles" id="particles"></div>
+  <div class="sweep"></div>
+
+  <div class="corner corner-tl"><svg viewBox="0 0 60 60"><path d="M0 0 L60 0 L60 4 L4 4 L4 60 L0 60 Z" fill="rgba(201,168,76,0.6)"/></svg></div>
+  <div class="corner corner-tr"><svg viewBox="0 0 60 60"><path d="M60 0 L0 0 L0 4 L56 4 L56 60 L60 60 Z" fill="rgba(201,168,76,0.6)"/></svg></div>
+  <div class="corner corner-bl"><svg viewBox="0 0 60 60"><path d="M0 60 L60 60 L60 56 L4 56 L4 0 L0 0 Z" fill="rgba(201,168,76,0.6)"/></svg></div>
+  <div class="corner corner-br"><svg viewBox="0 0 60 60"><path d="M60 60 L0 60 L0 56 L56 56 L56 0 L60 0 Z" fill="rgba(201,168,76,0.6)"/></svg></div>
+</div>
+
+<div class="controls">
+  <span class="title">V2 — Animated Build</span>
+  <button onclick="replay()">&#9654; Replay</button>
+  <button id="btnPause" onclick="togglePause()">&#9646;&#9646; Pause</button>
+  <button id="btnLoop" onclick="toggleLoop()">&#128260; Loop</button>
+  <span id="loopStatus">Off</span>
+  <button onclick="toggleEditor()">&#9881; Editor</button>
+  <input type="range" id="timeline" min="0" max="2600" step="1" value="0" style="width:120px;accent-color:var(--gold);" oninput="scrub(this.value)" title="Timeline scrubber">
+  <span id="timeDisplay" style="font-family:monospace;">0.00s</span>
+</div>
+
+<div class="editor-panel" id="editorPanel">
+  <h3>Position Editor</h3>
+
+  <div class="section-title">BAR Logo</div>
+  <div class="editor-row">
+    <label>Top</label>
+    <input type="range" min="-10" max="30" step="0.5" value="1" data-var="--bar-top" data-unit="%">
+    <span class="value">1%</span>
+  </div>
+  <div class="editor-row">
+    <label>Width</label>
+    <input type="range" min="10" max="60" step="1" value="26" data-var="--bar-width" data-unit="%">
+    <span class="value">26%</span>
+  </div>
+
+  <div class="section-title">ALPHA Text</div>
+  <div class="editor-row">
+    <label>Top</label>
+    <input type="range" min="0" max="40" step="0.5" value="16" data-var="--alpha-top" data-unit="%">
+    <span class="value">16%</span>
+  </div>
+  <div class="editor-row">
+    <label>Width</label>
+    <input type="range" min="20" max="80" step="1" value="55" data-var="--alpha-width" data-unit="%">
+    <span class="value">55%</span>
+  </div>
+
+  <div class="section-title">Alpha VI (Hero)</div>
+  <div class="editor-row">
+    <label>Top</label>
+    <input type="range" min="5" max="50" step="0.5" value="26" data-var="--alpha-vi-top" data-unit="%">
+    <span class="value">26%</span>
+  </div>
+  <div class="editor-row">
+    <label>Width</label>
+    <input type="range" min="40" max="120" step="1" value="90" data-var="--alpha-vi-width" data-unit="%">
+    <span class="value">90%</span>
+  </div>
+
+  <div class="section-title">CUP Text</div>
+  <div class="editor-row">
+    <label>Bottom</label>
+    <input type="range" min="-5" max="25" step="0.5" value="2" data-var="--cup-bottom" data-unit="%">
+    <span class="value">2%</span>
+  </div>
+  <div class="editor-row">
+    <label>Width</label>
+    <input type="range" min="15" max="60" step="1" value="36" data-var="--cup-width" data-unit="%">
+    <span class="value">36%</span>
+  </div>
+
+  <div class="section-title">Shield</div>
+  <div class="editor-row">
+    <label>Scale</label>
+    <input type="range" min="0.5" max="1.5" step="0.01" value="1" data-var="--shield-scale" data-unit="">
+    <span class="value">1</span>
+  </div>
+
+  <div class="section-title">Shield Glow</div>
+  <div class="editor-row">
+    <label>Size</label>
+    <input type="range" min="20" max="120" step="1" value="55" data-var="--glow-size" data-unit="%">
+    <span class="value">55%</span>
+  </div>
+  <div class="editor-row">
+    <label>Opacity</label>
+    <input type="range" min="0" max="1" step="0.05" value="0.7" data-var="--glow-opacity" data-unit="">
+    <span class="value">0.7</span>
+  </div>
+  <div class="editor-row">
+    <label>Start</label>
+    <input type="range" min="0" max="2.6" step="0.05" value="0.6" id="glowStart" data-key="glowStart">
+    <span class="value" id="glowStartVal">0.6s</span>
+  </div>
+  <div class="editor-row">
+    <label>End</label>
+    <input type="range" min="0" max="2.6" step="0.05" value="2.0" id="glowEnd" data-key="glowEnd">
+    <span class="value" id="glowEndVal">2.0s</span>
+  </div>
+
+  <div class="section-title">Blade Texture</div>
+  <div class="editor-row">
+    <label>Opacity</label>
+    <input type="range" min="0" max="1" step="0.05" value="1" data-var="--blade-texture-opacity" data-unit="">
+    <span class="value">1</span>
+  </div>
+  <div class="editor-row">
+    <label>Gap</label>
+    <input type="range" min="1" max="10" step="0.5" value="3" data-var="--blade-scanline-gap" data-unit="">
+    <span class="value">3</span>
+  </div>
+  <div class="editor-row">
+    <label>Weight</label>
+    <input type="range" min="0.5" max="5" step="0.5" value="1" data-var="--blade-scanline-weight" data-unit="">
+    <span class="value">1</span>
+  </div>
+  <div class="editor-row">
+    <label>Highlight</label>
+    <input type="range" min="0" max="0.2" step="0.005" value="0.04" data-var="--blade-highlight" data-unit="">
+    <span class="value">0.04</span>
+  </div>
+
+  <div class="section-title">Sparks</div>
+  <div class="editor-row">
+    <label>Count</label>
+    <input type="range" min="10" max="150" step="5" value="50" data-var="--spark-count" data-unit="">
+    <span class="value">50</span>
+  </div>
+  <div class="editor-row">
+    <label>Size</label>
+    <input type="range" min="0.3" max="3" step="0.1" value="1" data-var="--spark-size" data-unit="">
+    <span class="value">1</span>
+  </div>
+  <div class="editor-row">
+    <label>Spread</label>
+    <input type="range" min="0.3" max="3" step="0.1" value="1" data-var="--spark-spread" data-unit="">
+    <span class="value">1</span>
+  </div>
+  <div class="editor-row">
+    <label>Duration</label>
+    <input type="range" min="0.3" max="3" step="0.1" value="1" data-var="--spark-duration" data-unit="">
+    <span class="value">1</span>
+  </div>
+  <div class="editor-row">
+    <label>Stretch</label>
+    <input type="range" min="1" max="6" step="0.1" value="1" data-var="--spark-stretch" data-unit="">
+    <span class="value">1</span>
+  </div>
+  <div class="editor-row">
+    <label>Decel</label>
+    <input type="range" min="0" max="1" step="0.05" value="0.3" data-var="--spark-decel" data-unit="">
+    <span class="value">0.3</span>
+  </div>
+
+  <div class="btn-row">
+    <button onclick="resetPositions()">Reset</button>
+    <button onclick="copyCSS()">Copy CSS</button>
+  </div>
+  <div class="btn-row">
+    <button onclick="saveDesignFile()">Save Design</button>
+    <button onclick="loadDesignFile()">Load Design</button>
+  </div>
+  <pre id="cssOutput"></pre>
+</div>
+
+<script>
+const TOTAL_DURATION = 3000;
+const STORAGE_KEY = 'stinger-v2-editor';
+let looping = false;
+let loopTimer = null;
+let glowStyleEl = null;
+
+/* ===== GLOW ANIMATION ===== */
+function getGlowStart() { return parseFloat(document.getElementById('glowStart').value); }
+function getGlowEnd()   { return parseFloat(document.getElementById('glowEnd').value); }
+
+function applyGlowAnimation() {
+  const start = getGlowStart();
+  const end = getGlowEnd();
+  const fadeIn = 0.5;
+  const fadeOut = 0.5;
+  const holdDur = Math.max(0, end - start - fadeIn);
+  const pulseDelay = start + fadeIn * 0.5;
+  const pulseDur = Math.max(0.3, end - start - fadeOut * 0.5);
+
+  if (glowStyleEl) glowStyleEl.remove();
+  glowStyleEl = document.createElement('style');
+  glowStyleEl.textContent = `
+    @keyframes glowIn {
+      0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+      100% { opacity: var(--glow-opacity); transform: translate(-50%, -50%) scale(1); }
+    }
+    @keyframes glowPulse {
+      0%   { opacity: var(--glow-opacity); transform: translate(-50%, -50%) scale(1); }
+      40%  { opacity: calc(var(--glow-opacity) * 1.3); transform: translate(-50%, -50%) scale(1.15); }
+      100% { opacity: var(--glow-opacity); transform: translate(-50%, -50%) scale(1); }
+    }
+    @keyframes glowOut {
+      0%   { opacity: var(--glow-opacity); }
+      100% { opacity: 0; }
+    }
+    .shield-glow {
+      animation: glowIn ${fadeIn}s cubic-bezier(0.16, 1, 0.3, 1) ${start}s forwards,
+                 glowPulse ${pulseDur}s ease-in-out ${pulseDelay}s 1 forwards,
+                 glowOut ${fadeOut}s ease-in ${end}s forwards;
+    }
+  `;
+  document.head.appendChild(glowStyleEl);
+}
+
+function updateGlowSliders() {
+  document.getElementById('glowStartVal').textContent = getGlowStart().toFixed(2) + 's';
+  document.getElementById('glowEndVal').textContent = getGlowEnd().toFixed(2) + 's';
+  applyGlowAnimation();
+  saveToStorage();
+}
+
+document.getElementById('glowStart').addEventListener('input', function() {
+  if (parseFloat(this.value) > getGlowEnd()) this.value = getGlowEnd();
+  updateGlowSliders();
+});
+document.getElementById('glowEnd').addEventListener('input', function() {
+  if (parseFloat(this.value) < getGlowStart()) this.value = getGlowStart();
+  updateGlowSliders();
+});
+
+/* ===== PARTICLES ===== */
+function getParticleSettings() {
+  const cs = getComputedStyle(document.documentElement);
+  return {
+    count: parseInt(cs.getPropertyValue('--spark-count')) || 50,
+    sizeMul: parseFloat(cs.getPropertyValue('--spark-size')) || 1,
+    spreadMul: parseFloat(cs.getPropertyValue('--spark-spread')) || 1,
+    durMul: parseFloat(cs.getPropertyValue('--spark-duration')) || 1,
+    stretch: parseFloat(cs.getPropertyValue('--spark-stretch')) || 1,
+    decel: parseFloat(cs.getPropertyValue('--spark-decel')) || 0.3,
+  };
+}
+
+function generateParticles(container) {
+  container.innerHTML = '';
+  const cfg = getParticleSettings();
+  for (let i = 0; i < cfg.count; i++) {
+    const p = document.createElement('div');
+    const angle = (Math.PI * 2 / cfg.count) * i + (Math.random() - 0.5) * 0.6;
+    const dist = (80 + Math.random() * 350) * cfg.spreadMul;
+    const dx = Math.cos(angle) * dist, dy = Math.sin(angle) * dist;
+    const dur = (0.4 + Math.random() * 0.5) * cfg.durMul;
+    const delay = 0.9 + Math.random() * 0.15;
+    const size = (2 + Math.random() * 5) * cfg.sizeMul;
+    const angleDeg = angle * (180 / Math.PI);
+
+    // Stretch: width is elongated along movement direction, height stays as base size
+    const w = size * cfg.stretch;
+    const h = size;
+    const br = cfg.stretch > 1.3 ? `${h/2}px` : '50%';
+
+    // Decel: how much the particle slows down (0 = constant speed, 1 = almost stops)
+    // We add intermediate keyframe steps where the particle has already traveled most of the distance
+    const d = Math.max(0, Math.min(1, cfg.decel));
+    const mid1Pct = 0.15;
+    const mid2Pct = 0.5;
+    // At mid2, particle has traveled further with decel (front-loaded movement)
+    const mid2Travel = 1 - Math.pow(1 - mid2Pct, 1 + d * 4);
+    const endTravel = 1;
+
+    p.style.cssText = `position:absolute;top:50%;left:50%;width:${w}px;height:${h}px;background:rgba(232,212,138,${0.5+Math.random()*0.5});border-radius:${br};opacity:0;box-shadow:0 0 ${size*2}px rgba(201,168,76,0.6),0 0 ${size*4}px rgba(201,168,76,0.2);transform-origin:center center;`;
+    const kf = `p${Date.now()}_${i}`;
+    const s = document.createElement('style');
+    // Rotate the stretched particle to align with its movement direction
+    const rot = cfg.stretch > 1.3 ? `rotate(${angleDeg}deg)` : '';
+    s.textContent = `@keyframes ${kf}{` +
+      `0%{opacity:0;transform:translate(0,0) scale(0) ${rot}}` +
+      `15%{opacity:1;transform:translate(${dx*mid1Pct}px,${dy*mid1Pct}px) scale(1.2) ${rot}}` +
+      `50%{opacity:0.7;transform:translate(${dx*mid2Travel}px,${dy*mid2Travel}px) scale(1) ${rot}}` +
+      `100%{opacity:0;transform:translate(${dx*endTravel}px,${dy*endTravel}px) scale(0) ${rot}}}`;
+    document.head.appendChild(s);
+    p.style.animation = `${kf} ${dur}s ease-out ${delay}s forwards`;
+    container.appendChild(p);
+  }
+}
+
+/* ===== REPLAY / LOOP ===== */
+function replay() {
+  applyGlowAnimation();
+  const s = document.getElementById('stinger'), c = s.cloneNode(true);
+  s.parentNode.replaceChild(c, s);
+  requestAnimationFrame(() => generateParticles(c.querySelector('.particles')));
+}
+
+function toggleLoop() {
+  looping = !looping;
+  const btn = document.getElementById('btnLoop');
+  const status = document.getElementById('loopStatus');
+  if (looping) {
+    btn.classList.add('active');
+    status.textContent = 'On';
+    replay();
+    loopTimer = setInterval(replay, TOTAL_DURATION);
+  } else {
+    btn.classList.remove('active');
+    status.textContent = 'Off';
+    clearInterval(loopTimer);
+    loopTimer = null;
+  }
+}
+
+/* ===== PAUSE / SCRUB ===== */
+let paused = false;
+
+function getAllAnimations() {
+  const anims = [];
+  document.getAnimations().forEach(a => anims.push(a));
+  document.querySelectorAll('#stinger, #stinger *').forEach(el => {
+    el.getAnimations().forEach(a => {
+      if (!anims.includes(a)) anims.push(a);
+    });
+  });
+  return anims;
+}
+
+function togglePause() {
+  paused = !paused;
+  const btn = document.getElementById('btnPause');
+  const anims = getAllAnimations();
+  if (paused) {
+    if (looping) toggleLoop();
+    anims.forEach(a => a.pause());
+    btn.classList.add('active');
+    btn.innerHTML = '&#9654; Play';
+  } else {
+    anims.forEach(a => a.play());
+    btn.classList.remove('active');
+    btn.innerHTML = '&#9646;&#9646; Pause';
+  }
+}
+
+function scrub(ms) {
+  const t = parseFloat(ms);
+  document.getElementById('timeDisplay').textContent = (t / 1000).toFixed(2) + 's';
+  const anims = getAllAnimations();
+  anims.forEach(a => {
+    a.pause();
+    a.currentTime = t;
+  });
+  if (!paused) {
+    paused = true;
+    const btn = document.getElementById('btnPause');
+    btn.classList.add('active');
+    btn.innerHTML = '&#9654; Play';
+  }
+}
+
+/* ===== EDITOR ===== */
+function toggleEditor() {
+  document.getElementById('editorPanel').classList.toggle('open');
+}
+
+/* ===== LOCAL STORAGE ===== */
+function saveToStorage() {
+  const data = {};
+  document.querySelectorAll('.editor-panel input[type="range"]').forEach(input => {
+    const key = input.dataset.var || input.dataset.key;
+    if (key) data[key] = input.value;
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function loadFromStorage() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return;
+  try {
+    const data = JSON.parse(raw);
+    document.querySelectorAll('.editor-panel input[type="range"]').forEach(input => {
+      const key = input.dataset.var || input.dataset.key;
+      if (key && data[key] !== undefined) {
+        input.value = data[key];
+        const unit = input.dataset.unit;
+        if (input.dataset.var) {
+          const val = data[key] + (unit || '');
+          document.documentElement.style.setProperty(input.dataset.var, val);
+          input.nextElementSibling.textContent = val || data[key];
+        }
+      }
+    });
+    // update glow timing displays
+    document.getElementById('glowStartVal').textContent = parseFloat(document.getElementById('glowStart').value).toFixed(2) + 's';
+    document.getElementById('glowEndVal').textContent = parseFloat(document.getElementById('glowEnd').value).toFixed(2) + 's';
+  } catch(e) {}
+}
+
+/* ===== CSS VAR SLIDERS ===== */
+const defaults = {};
+document.querySelectorAll('.editor-panel input[type="range"]').forEach(input => {
+  const key = input.dataset.var || input.dataset.key;
+  if (key) defaults[key] = input.value;
+
+  if (input.dataset.var) {
+    input.addEventListener('input', () => {
+      const val = input.value + (input.dataset.unit || '');
+      document.documentElement.style.setProperty(input.dataset.var, val);
+      input.nextElementSibling.textContent = val || input.value;
+      saveToStorage();
+    });
+  }
+});
+
+function resetPositions() {
+  localStorage.removeItem(STORAGE_KEY);
+  document.querySelectorAll('.editor-panel input[type="range"]').forEach(input => {
+    const key = input.dataset.var || input.dataset.key;
+    if (key && defaults[key] !== undefined) {
+      input.value = defaults[key];
+      if (input.dataset.var) {
+        const val = defaults[key] + (input.dataset.unit || '');
+        document.documentElement.style.setProperty(input.dataset.var, val);
+        input.nextElementSibling.textContent = val || defaults[key];
+      }
+    }
+  });
+  document.getElementById('glowStartVal').textContent = '0.60s';
+  document.getElementById('glowEndVal').textContent = '2.00s';
+  applyGlowAnimation();
+}
+
+function copyCSS() {
+  const lines = [];
+  document.querySelectorAll('.editor-panel input[type="range"]').forEach(input => {
+    const key = input.dataset.var || input.dataset.key;
+    const unit = input.dataset.unit || '';
+    if (input.dataset.var) {
+      lines.push(`  ${input.dataset.var}: ${input.value}${unit};`);
+    } else if (input.dataset.key) {
+      lines.push(`  /* ${input.dataset.key}: ${input.value}${unit ? unit : 's'} */`);
+    }
+  });
+  const css = `:root {\n${lines.join('\n')}\n}`;
+  navigator.clipboard.writeText(css).then(() => {
+    const out = document.getElementById('cssOutput');
+    out.textContent = css;
+    out.classList.add('show');
+    setTimeout(() => out.classList.remove('show'), 4000);
+  });
+}
+
+/* ===== DESIGN FILE (JSON) ===== */
+function getDesignData() {
+  const data = {};
+  document.querySelectorAll('.editor-panel input[type="range"]').forEach(input => {
+    const key = input.dataset.var || input.dataset.key;
+    if (key) data[key] = input.value;
+  });
+  return data;
+}
+
+function applyDesignData(data) {
+  document.querySelectorAll('.editor-panel input[type="range"]').forEach(input => {
+    const key = input.dataset.var || input.dataset.key;
+    if (key && data[key] !== undefined) {
+      input.value = data[key];
+      if (input.dataset.var) {
+        const val = data[key] + (input.dataset.unit || '');
+        document.documentElement.style.setProperty(input.dataset.var, val);
+        input.nextElementSibling.textContent = val || data[key];
+      }
+    }
+  });
+  document.getElementById('glowStartVal').textContent = parseFloat(document.getElementById('glowStart').value).toFixed(2) + 's';
+  document.getElementById('glowEndVal').textContent = parseFloat(document.getElementById('glowEnd').value).toFixed(2) + 's';
+  applyGlowAnimation();
+}
+
+function saveDesignFile() {
+  const data = getDesignData();
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'design.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+
+  const out = document.getElementById('cssOutput');
+  out.textContent = 'Design saved to design.json';
+  out.classList.add('show');
+  setTimeout(() => out.classList.remove('show'), 3000);
+}
+
+function loadDesignFile() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        applyDesignData(data);
+        saveToStorage();
+        const out = document.getElementById('cssOutput');
+        out.textContent = 'Design loaded from ' + file.name;
+        out.classList.add('show');
+        setTimeout(() => out.classList.remove('show'), 3000);
+      } catch(err) {
+        alert('Invalid design file: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// Auto-load latest design*.json if served via HTTP (for preview/export)
+async function tryLoadLatestDesign() {
+  // Try common design file names, pick the one with newest Last-Modified
+  const candidates = ['design.json'];
+  // Also try numbered variants
+  for (let i = 2; i <= 10; i++) candidates.push(`design-v${i}.json`, `design${i}.json`);
+  // Also try the download duplicate pattern from browsers
+  candidates.push('design (1).json', 'design (2).json', 'design (3).json');
+
+  const results = await Promise.allSettled(
+    candidates.map(async name => {
+      const r = await fetch(name);
+      if (!r.ok) throw new Error();
+      const modified = r.headers.get('Last-Modified');
+      const mtime = modified ? new Date(modified).getTime() : 0;
+      const data = await r.json();
+      return { name, data, mtime };
+    })
+  );
+
+  const found = results
+    .filter(r => r.status === 'fulfilled')
+    .map(r => r.value)
+    .sort((a, b) => b.mtime - a.mtime);
+
+  if (found.length > 0) {
+    applyDesignData(found[0].data);
+    console.log(`Loaded design: ${found[0].name}` + (found.length > 1 ? ` (newest of ${found.length})` : ''));
+    return true;
+  }
+  return false;
+}
+
+/* ===== INIT ===== */
+(async () => {
+  // In browser: prefer localStorage (always up to date from editor)
+  // design.json auto-load is fallback / used by export script
+  const hasStorage = localStorage.getItem(STORAGE_KEY);
+  if (hasStorage) {
+    loadFromStorage();
+  } else {
+    await tryLoadLatestDesign();
+  }
+  applyGlowAnimation();
+  generateParticles(document.getElementById('particles'));
+})();
+</script>
+</body>
+</html>
