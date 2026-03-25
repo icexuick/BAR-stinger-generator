@@ -2,9 +2,9 @@
  * BAR Stinger Export — Puppeteer frame capture + FFmpeg VP9 alpha WebM
  *
  * Usage:
- *   node export-stinger.js [--fps 60] [--duration 3000] [--width 2560] [--height 1440]
+ *   node export-stinger.js [--event alphacup-vi] [--fps 60] [--duration 3000] [--width 2560] [--height 1440]
  *
- * Reads design.json from bar-stinger-alphacup-vi/ for editor settings.
+ * Reads design.json from events/<event>/ for editor settings.
  * Use "Save Design" in the browser editor to create this file.
  *
  * Requirements:
@@ -28,19 +28,20 @@ const FPS = parseInt(getArg('--fps', '60'));
 let DURATION_MS = parseInt(getArg('--duration', '0')); // 0 = auto-detect from design
 const WIDTH = parseInt(getArg('--width', '2560'));
 const HEIGHT = parseInt(getArg('--height', '1440'));
+const EVENT = getArg('--event', 'alphacup-vi');
 
-const STINGER_DIR = path.resolve(__dirname, 'bar-stinger-alphacup-vi');
-const STINGER_FILE = path.join(STINGER_DIR, 'stinger-v2-animated.html');
-const DESIGN_FILE = path.join(STINGER_DIR, 'design.json');
-const FILE_URL = `file:///${STINGER_FILE.replace(/\\/g, '/')}`;
+const STINGER_FILE = path.resolve(__dirname, 'stinger.html');
+const EVENT_DIR = path.resolve(__dirname, 'events', EVENT);
+const FILE_URL = `file:///${STINGER_FILE.replace(/\\/g, '/')}?event=${EVENT}`;
 const FRAMES_DIR = path.join(__dirname, 'frames');
 const NOW = new Date();
 const DATE_SUFFIX = `${NOW.getFullYear()}${String(NOW.getMonth()+1).padStart(2,'0')}${String(NOW.getDate()).padStart(2,'0')}-${String(NOW.getHours()).padStart(2,'0')}${String(NOW.getMinutes()).padStart(2,'0')}${String(NOW.getSeconds()).padStart(2,'0')}`;
-const OUTPUT_FILE = path.join(__dirname, `stinger-${WIDTH}x${HEIGHT}_${DATE_SUFFIX}.webm`);
+const OUTPUT_FILE = path.join(__dirname, `stinger-${EVENT}-${WIDTH}x${HEIGHT}_${DATE_SUFFIX}.webm`);
 
 // ===== MAIN =====
 (async () => {
   console.log('=== BAR Stinger Export ===');
+  console.log(`Event: ${EVENT}`);
   console.log(`Resolution: ${WIDTH}x${HEIGHT}`);
   console.log(`Source: ${STINGER_FILE}`);
 
@@ -59,23 +60,25 @@ const OUTPUT_FILE = path.join(__dirname, `stinger-${WIDTH}x${HEIGHT}_${DATE_SUFF
       process.exit(1);
     }
   } else {
-    // Auto-detect: find all design*.json files in the stinger dir and pick newest
-    const designFiles = fs.readdirSync(STINGER_DIR)
-      .filter(f => f.match(/^design.*\.json$/i))
-      .map(f => {
-        const fp = path.join(STINGER_DIR, f);
-        return { path: fp, name: f, mtime: fs.statSync(fp).mtimeMs };
-      })
-      .sort((a, b) => b.mtime - a.mtime);
+    // Auto-detect: find all design*.json files in the event dir and pick newest
+    if (fs.existsSync(EVENT_DIR)) {
+      const designFiles = fs.readdirSync(EVENT_DIR)
+        .filter(f => f.match(/^design.*\.json$/i) && !f.match(/corner/i))
+        .map(f => {
+          const fp = path.join(EVENT_DIR, f);
+          return { path: fp, name: f, mtime: fs.statSync(fp).mtimeMs };
+        })
+        .sort((a, b) => b.mtime - a.mtime);
 
-    if (designFiles.length > 0) {
-      designFile = designFiles[0].path;
-      if (designFiles.length > 1) {
-        console.log(`  Found ${designFiles.length} design files, using newest:`);
-        designFiles.forEach((f, i) => {
-          const date = new Date(f.mtime).toLocaleString();
-          console.log(`    ${i === 0 ? '>' : ' '} ${f.name} (${date})`);
-        });
+      if (designFiles.length > 0) {
+        designFile = designFiles[0].path;
+        if (designFiles.length > 1) {
+          console.log(`  Found ${designFiles.length} design files, using newest:`);
+          designFiles.forEach((f, i) => {
+            const date = new Date(f.mtime).toLocaleString();
+            console.log(`    ${i === 0 ? '>' : ' '} ${f.name} (${date})`);
+          });
+        }
       }
     }
   }

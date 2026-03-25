@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BAR Alpha Cup VI — Logo Corner Animation</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #e8d48a;
+    --gold-bright: #fff1c4;
+    --gold-dark: #8a6d2b;
+
+    /* Position & size */
+    --logo-x: 85%;
+    --logo-y: 85%;
+    --logo-size: 12%;
+    --logo-base-opacity: 0.9;
+
+    /* Glow */
+    --glow-size: 180%;
+    --glow-opacity: 0.25;
+    --glow-pulse-amount: 0.12;
+    --glow-pulse-speed: 4;
+
+    /* Sweep */
+    --sweep-opacity: 0.15;
+    --sweep-interval: 6;
+
+    /* 3D spin */
+    --spin-amount: 25;
+    --spin-speed: 3;
+    --spin-interval: 8;
+    --spin-depth: 30;
+
+    /* Layer depth offsets for 3D (px, relative to logo size) */
+    --depth-shield: 0;
+    --depth-bar: 12;
+    --depth-alpha: 20;
+    --depth-alpha-vi: 30;
+    --depth-cup: 15;
+  }
+
+  body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .scene {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    perspective: 1200px;
+  }
+
+  /* ===== LOGO CONTAINER ===== */
+  .logo-anchor {
+    position: absolute;
+    left: var(--logo-x);
+    top: var(--logo-y);
+    transform: translate(-50%, -50%);
+    width: var(--logo-size);
+    aspect-ratio: 745 / 804;
+  }
+
+  .logo-3d {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    opacity: var(--logo-base-opacity);
+  }
+
+  /* ===== GLOW ===== */
+  .logo-glow {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: var(--glow-size);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle,
+      rgba(255,255,255,0.5) 0%,
+      rgba(240,230,200,0.25) 15%,
+      rgba(201,168,76,0.1) 35%,
+      transparent 60%
+    );
+    opacity: var(--glow-opacity);
+    pointer-events: none;
+  }
+
+  /* ===== LOGO PARTS ===== */
+  .logo-part {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .logo-part img, .logo-part svg, .logo-part object {
+    width: 100%; height: auto; display: block; pointer-events: none;
+  }
+
+  .part-shield { inset: 0; }
+  .part-shield object { width: 100%; height: 100%; }
+
+  .part-bar {
+    top: 1%; left: 50%; width: 26%;
+    transform: translateX(-50%);
+  }
+  .part-alpha {
+    top: 16%; left: 50%; width: 55%;
+    transform: translateX(-50%);
+  }
+  .part-alpha-vi {
+    top: 26%; left: 50%; width: 90%;
+    transform: translateX(-50%);
+  }
+  .part-alpha-vi object {
+    filter: drop-shadow(0 0 20px rgba(201, 168, 76, 0.25));
+  }
+  .part-cup {
+    bottom: 2%; left: 50%; width: 36%;
+    transform: translateX(-50%);
+  }
+
+  /* ===== SWEEP LINE ===== */
+  .logo-sweep {
+    position: absolute;
+    inset: -20% -40%;
+    background: linear-gradient(105deg,
+      transparent 40%,
+      rgba(255,248,225,0.06) 45%,
+      rgba(255,255,255, var(--sweep-opacity)) 50%,
+      rgba(255,248,225,0.06) 55%,
+      transparent 60%
+    );
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  /* ===== CONTROLS ===== */
+  .controls {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    background: rgba(0,0,0,0.9);
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: 8px;
+    padding: 10px 24px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    backdrop-filter: blur(10px);
+  }
+  .controls button {
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    border: none; color: #1a1a18;
+    padding: 8px 24px; border-radius: 4px;
+    cursor: pointer; font-weight: 700; font-size: 14px;
+  }
+  .controls button:hover { filter: brightness(1.2); }
+  .controls button.active { background: linear-gradient(135deg, #8a2b2b, #c94c4c); color: #fff; }
+  .controls span { color: #777; font-size: 12px; }
+  .controls .title { color: var(--gold); font-size: 13px; font-weight: 600; }
+
+  /* ===== EDITOR PANEL ===== */
+  .editor-panel {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 9999;
+    background: rgba(0,0,0,0.92);
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: 8px;
+    padding: 16px;
+    backdrop-filter: blur(10px);
+    width: 260px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: none;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .editor-panel.open { display: block; }
+  .editor-panel h3 {
+    color: var(--gold);
+    font-size: 13px;
+    margin: 0 0 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .editor-panel .section-title {
+    color: var(--gold-light);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 14px 0 6px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(201,168,76,0.15);
+  }
+  .editor-panel .section-title:first-of-type { border-top: none; margin-top: 4px; padding-top: 0; }
+  .editor-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .editor-row label {
+    color: #aaa;
+    font-size: 11px;
+    width: 60px;
+    flex-shrink: 0;
+  }
+  .editor-row input[type="range"] {
+    flex: 1;
+    accent-color: var(--gold);
+    height: 4px;
+  }
+  .editor-row .value {
+    color: var(--gold-light);
+    font-size: 11px;
+    width: 38px;
+    text-align: right;
+    font-family: monospace;
+  }
+  .editor-panel .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(201,168,76,0.15);
+  }
+  .editor-panel button {
+    flex: 1;
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    border: none; color: #1a1a18;
+    padding: 6px 12px; border-radius: 4px;
+    cursor: pointer; font-weight: 700; font-size: 11px;
+  }
+  .editor-panel button:hover { filter: brightness(1.2); }
+  .editor-panel button.secondary {
+    background: rgba(255,255,255,0.1);
+    color: #aaa;
+  }
+  .editor-panel pre {
+    background: rgba(255,255,255,0.05);
+    color: var(--gold-light);
+    font-size: 10px;
+    padding: 8px;
+    border-radius: 4px;
+    margin-top: 8px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 120px;
+    overflow-y: auto;
+    display: none;
+  }
+  .editor-panel pre.show { display: block; }
+
+  .event-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(201,168,76,0.25);
+  }
+  .event-selector label {
+    color: #aaa;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .event-selector select {
+    flex: 1;
+    background: rgba(255,255,255,0.08);
+    color: var(--gold-light);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .event-selector select:focus { outline: 1px solid var(--gold); }
+</style>
+</head>
+<body>
+
+<div class="scene" id="scene">
+  <div class="logo-anchor" id="logoAnchor">
+    <div class="logo-glow" id="logoGlow"></div>
+    <div class="logo-3d" id="logo3d">
+      <div class="logo-part part-shield" data-depth="shield">
+        <object data-asset="shield.svg" type="image/svg+xml"></object>
+      </div>
+      <div class="logo-part part-bar" data-depth="bar">
+        <object data-asset="bar-logo.svg" type="image/svg+xml"></object>
+      </div>
+      <div class="logo-part part-alpha" data-depth="alpha">
+        <object data-asset="alpha.svg" type="image/svg+xml"></object>
+      </div>
+      <div class="logo-part part-alpha-vi" data-depth="alphaVi">
+        <object data-asset="alpha-vi.svg" type="image/svg+xml"></object>
+      </div>
+      <div class="logo-part part-cup" data-depth="cup">
+        <object data-asset="cup.svg" type="image/svg+xml"></object>
+      </div>
+    </div>
+    <div class="logo-sweep" id="logoSweep"></div>
+  </div>
+</div>
+
+<div class="controls">
+  <span class="title">Logo Corner Anim</span>
+  <button id="btnPause" onclick="togglePause()">&#9646;&#9646; Pause</button>
+  <button onclick="toggleEditor()">&#9881; Editor</button>
+  <span id="timeDisplay" style="font-family:monospace;">0.00s</span>
+</div>
+
+<div class="editor-panel" id="editorPanel">
+  <h3>Logo Corner Editor</h3>
+
+  <div class="event-selector">
+    <label>Event</label>
+    <select id="eventSelect" onchange="switchEvent(this.value)"></select>
+  </div>
+
+  <div class="section-title">Position & Size</div>
+  <div class="editor-row">
+    <label>X</label>
+    <input type="range" min="5" max="95" step="0.5" value="85" data-var="--logo-x" data-unit="%">
+    <span class="value">85%</span>
+  </div>
+  <div class="editor-row">
+    <label>Y</label>
+    <input type="range" min="5" max="95" step="0.5" value="85" data-var="--logo-y" data-unit="%">
+    <span class="value">85%</span>
+  </div>
+  <div class="editor-row">
+    <label>Size</label>
+    <input type="range" min="3" max="30" step="0.5" value="12" data-var="--logo-size" data-unit="%">
+    <span class="value">12%</span>
+  </div>
+  <div class="editor-row">
+    <label>Opacity</label>
+    <input type="range" min="0.1" max="1" step="0.05" value="0.9" data-var="--logo-base-opacity" data-unit="">
+    <span class="value">0.9</span>
+  </div>
+
+  <div class="section-title">Glow</div>
+  <div class="editor-row">
+    <label>Size</label>
+    <input type="range" min="100" max="400" step="5" value="180" data-var="--glow-size" data-unit="%">
+    <span class="value">180%</span>
+  </div>
+  <div class="editor-row">
+    <label>Opacity</label>
+    <input type="range" min="0" max="0.8" step="0.01" value="0.25" data-var="--glow-opacity" data-unit="">
+    <span class="value">0.25</span>
+  </div>
+  <div class="editor-row">
+    <label>Pulse</label>
+    <input type="range" min="0" max="0.4" step="0.01" value="0.12" data-var="--glow-pulse-amount" data-unit="">
+    <span class="value">0.12</span>
+  </div>
+  <div class="editor-row">
+    <label>Speed</label>
+    <input type="range" min="1" max="12" step="0.5" value="4" data-var="--glow-pulse-speed" data-unit="">
+    <span class="value">4</span>
+  </div>
+
+  <div class="section-title">Sweep / Glint</div>
+  <div class="editor-row">
+    <label>Opacity</label>
+    <input type="range" min="0" max="0.5" step="0.01" value="0.15" data-var="--sweep-opacity" data-unit="">
+    <span class="value">0.15</span>
+  </div>
+  <div class="editor-row">
+    <label>Interval</label>
+    <input type="range" min="2" max="15" step="0.5" value="6" data-var="--sweep-interval" data-unit="">
+    <span class="value">6</span>
+  </div>
+
+  <div class="section-title">3D Spin</div>
+  <div class="editor-row">
+    <label>Angle</label>
+    <input type="range" min="0" max="60" step="1" value="25" data-var="--spin-amount" data-unit="">
+    <span class="value">25</span>
+  </div>
+  <div class="editor-row">
+    <label>Speed</label>
+    <input type="range" min="0.5" max="8" step="0.5" value="3" data-var="--spin-speed" data-unit="">
+    <span class="value">3</span>
+  </div>
+  <div class="editor-row">
+    <label>Interval</label>
+    <input type="range" min="3" max="20" step="0.5" value="8" data-var="--spin-interval" data-unit="">
+    <span class="value">8</span>
+  </div>
+  <div class="editor-row">
+    <label>Depth</label>
+    <input type="range" min="0" max="80" step="1" value="30" data-var="--spin-depth" data-unit="">
+    <span class="value">30</span>
+  </div>
+
+  <div class="section-title">Duration</div>
+  <div class="editor-row">
+    <label>Loop</label>
+    <input type="range" min="3" max="20" step="0.5" value="10" data-key="loopDuration">
+    <span class="value">10s</span>
+  </div>
+
+  <div class="btn-row">
+    <button onclick="resetAll()">Reset</button>
+    <button onclick="copyCSS()">Copy CSS</button>
+  </div>
+  <div class="btn-row">
+    <button onclick="saveDesignFile()">Save Design</button>
+    <button onclick="loadDesignFile()">Load Design</button>
+  </div>
+  <pre id="cssOutput"></pre>
+</div>
+
+<script>
+const STORAGE_KEY = 'logo-corner-editor';
+let paused = false;
+let startTime = performance.now();
+let loopDuration = 10; // seconds
+let currentEvent = 'alphacup-vi';
+
+/* ===== EVENT / ASSET LOADING ===== */
+function getEventPath(eventName) {
+  return `events/${eventName}`;
+}
+
+function loadAssets(eventName) {
+  const basePath = getEventPath(eventName) + '/assets';
+  document.querySelectorAll('[data-asset]').forEach(obj => {
+    obj.setAttribute('data', `${basePath}/${obj.dataset.asset}`);
+  });
+}
+
+async function discoverEvents() {
+  const select = document.getElementById('eventSelect');
+  if (!select) return;
+
+  const knownEvents = [];
+  try {
+    const r = await fetch('events/');
+    if (r.ok) {
+      const html = await r.text();
+      const matches = html.matchAll(/href="([^"]+?)\/?\"/gi);
+      for (const m of matches) {
+        const name = m[1].replace(/\/$/, '');
+        if (name && !name.startsWith('.') && !name.startsWith('..') && name !== 'events') {
+          knownEvents.push(name);
+        }
+      }
+    }
+  } catch(e) {}
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlEvent = urlParams.get('event');
+
+  if (urlEvent && !knownEvents.includes(urlEvent)) {
+    knownEvents.unshift(urlEvent);
+  }
+  if (knownEvents.length === 0) knownEvents.push('alphacup-vi');
+
+  select.innerHTML = '';
+  knownEvents.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+
+  currentEvent = urlEvent || knownEvents[0];
+  select.value = currentEvent;
+}
+
+function switchEvent(eventName) {
+  currentEvent = eventName;
+  loadAssets(eventName);
+  const url = new URL(window.location);
+  url.searchParams.set('event', eventName);
+  window.history.replaceState({}, '', url);
+  tryLoadDesign();
+}
+
+/* ===== ANIMATION ENGINE ===== */
+function getVar(name) {
+  return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
+}
+
+function animate(now) {
+  if (paused) { requestAnimationFrame(animate); return; }
+
+  const elapsed = (now - startTime) / 1000;
+  const t = elapsed % loopDuration;
+
+  // Time display
+  document.getElementById('timeDisplay').textContent = t.toFixed(2) + 's';
+
+  // --- Glow pulse ---
+  const glowBase = getVar('--glow-opacity');
+  const glowPulse = getVar('--glow-pulse-amount');
+  const glowSpeed = getVar('--glow-pulse-speed');
+  const glowVal = glowBase + Math.sin(t * Math.PI * 2 / glowSpeed) * glowPulse;
+  document.getElementById('logoGlow').style.opacity = Math.max(0, glowVal);
+
+  // --- Sweep / glint ---
+  const sweepInterval = getVar('--sweep-interval');
+  const sweepPhase = t % sweepInterval;
+  const sweepDur = 0.8;
+  const sweep = document.getElementById('logoSweep');
+  if (sweepPhase < sweepDur) {
+    const p = sweepPhase / sweepDur;
+    // Sweep moves from left to right
+    const xPct = -40 + p * 180; // -40% to 140%
+    sweep.style.opacity = '1';
+    sweep.style.transform = `translateX(${xPct}%)`;
+  } else {
+    sweep.style.opacity = '0';
+  }
+
+  // --- 3D spin ---
+  const spinAmount = getVar('--spin-amount');
+  const spinSpeed = getVar('--spin-speed');
+  const spinInterval = getVar('--spin-interval');
+  const spinDepth = getVar('--spin-depth');
+  const spinPhase = t % spinInterval;
+
+  let rotY = 0;
+  if (spinPhase < spinSpeed) {
+    // Smooth spin: ease in-out, full rotation feel
+    const p = spinPhase / spinSpeed;
+    // Go from 0 -> spinAmount -> 0 with a smooth curve
+    rotY = spinAmount * Math.sin(p * Math.PI);
+  }
+
+  const logo3d = document.getElementById('logo3d');
+  logo3d.style.transform = `rotateY(${rotY}deg)`;
+
+  // Apply depth to individual layers
+  const depthScale = spinDepth * (rotY / Math.max(1, spinAmount));
+  document.querySelectorAll('[data-depth]').forEach(el => {
+    const layer = el.dataset.depth;
+    let z = 0;
+    switch(layer) {
+      case 'shield':  z = 0; break;
+      case 'bar':     z = getVar('--depth-bar'); break;
+      case 'alpha':   z = getVar('--depth-alpha'); break;
+      case 'alphaVi': z = getVar('--depth-alpha-vi'); break;
+      case 'cup':     z = getVar('--depth-cup'); break;
+    }
+    el.style.transform = el.style.transform
+      ? el.style.transform.replace(/translateZ\([^)]*\)/, `translateZ(${z * depthScale / spinDepth}px)`)
+      : `translateZ(${z * depthScale / spinDepth}px)`;
+
+    // For parts that have translateX(-50%), preserve it
+    if (layer !== 'shield') {
+      el.style.transform = `translateX(-50%) translateZ(${z * depthScale / spinDepth}px)`;
+    } else {
+      el.style.transform = `translateZ(${z * depthScale / spinDepth}px)`;
+    }
+  });
+
+  requestAnimationFrame(animate);
+}
+
+requestAnimationFrame(animate);
+
+/* ===== CONTROLS ===== */
+function togglePause() {
+  paused = !paused;
+  const btn = document.getElementById('btnPause');
+  if (paused) {
+    btn.classList.add('active');
+    btn.innerHTML = '&#9654; Play';
+  } else {
+    btn.classList.remove('active');
+    btn.innerHTML = '&#9646;&#9646; Pause';
+  }
+}
+
+function toggleEditor() {
+  document.getElementById('editorPanel').classList.toggle('open');
+}
+
+/* ===== LOCAL STORAGE ===== */
+function saveToStorage() {
+  const data = {};
+  document.querySelectorAll('.editor-panel input[type="range"]').forEach(input => {
+    const key = input.dataset.var || input.dataset.key;
+    if (key) data[key] = input.value;
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function loadFromStorage() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return false;
+  try {
+    const data = JSON.parse(raw);
+    applyData(data);
+    return true;
+  } catch(e) { return false; }
+}
+
+function applyData(data) {
+  document.querySelectorAll('.editor-panel input[type="range"]').forEach(input => {
+    const key = input.dataset.var || input.dataset.key;
+    if (key && data[key] !== undefined) {
+      input.value = data[key];
+      if (input.dataset.var) {
+        const val = data[key] + (input.dataset.unit || '');
+        document.documentElement.style.setProperty(input.dataset.var, val);
+        if (input.nextElementSibling) input.nextElementSibling.textContent = val || data[key];
+      } else if (key === 'loopDuration') {
+        loopDuration = parseFloat(data[key]);
+        if (input.nextElementSibling) input.nextElementSibling.textContent = parseFloat(data[key]).toFixed(1) + 's';
+      }
+    }
+  });
+}
+
+/* ===== CSS VAR SLIDERS ===== */
+const defaults = {};
+document.querySelectorAll('.editor-panel input[type="range"]').forEach(input => {
+  const key = input.dataset.var || input.dataset.key;
+  if (key) defaults[key] = input.value;
+
+  input.addEventListener('input', () => {
+    if (input.dataset.var) {
+      const val = input.value + (input.dataset.unit || '');
+      document.documentElement.style.setProperty(input.dataset.var, val);
+      if (input.nextElementSibling) input.nextElementSibling.textContent = val || input.value;
+    } else if (input.dataset.key === 'loopDuration') {
+      loopDuration = parseFloat(input.value);
+      if (input.nextElementSibling) input.nextElementSibling.textContent = parseFloat(input.value).toFixed(1) + 's';
+    }
+    saveToStorage();
+  });
+});
+
+function resetAll() {
+  localStorage.removeItem(STORAGE_KEY);
+  document.querySelectorAll('.editor-panel input[type="range"]').forEach(input => {
+    const key = input.dataset.var || input.dataset.key;
+    if (key && defaults[key] !== undefined) {
+      input.value = defaults[key];
+      if (input.dataset.var) {
+        const val = defaults[key] + (input.dataset.unit || '');
+        document.documentElement.style.setProperty(input.dataset.var, val);
+        if (input.nextElementSibling) input.nextElementSibling.textContent = val || defaults[key];
+      } else if (key === 'loopDuration') {
+        loopDuration = parseFloat(defaults[key]);
+        if (input.nextElementSibling) input.nextElementSibling.textContent = parseFloat(defaults[key]).toFixed(1) + 's';
+      }
+    }
+  });
+}
+
+function copyCSS() {
+  const lines = [];
+  document.querySelectorAll('.editor-panel input[type="range"]').forEach(input => {
+    const key = input.dataset.var || input.dataset.key;
+    const unit = input.dataset.unit || '';
+    if (input.dataset.var) {
+      lines.push(`  ${input.dataset.var}: ${input.value}${unit};`);
+    } else if (input.dataset.key) {
+      lines.push(`  /* ${input.dataset.key}: ${input.value}${unit ? unit : 's'} */`);
+    }
+  });
+  const css = `:root {\n${lines.join('\n')}\n}`;
+  navigator.clipboard.writeText(css).then(() => {
+    const out = document.getElementById('cssOutput');
+    out.textContent = css;
+    out.classList.add('show');
+    setTimeout(() => out.classList.remove('show'), 4000);
+  });
+}
+
+/* ===== DESIGN FILE (JSON) ===== */
+function saveDesignFile() {
+  const data = {};
+  document.querySelectorAll('.editor-panel input[type="range"]').forEach(input => {
+    const key = input.dataset.var || input.dataset.key;
+    if (key) data[key] = input.value;
+  });
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'design-corner.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+
+  const out = document.getElementById('cssOutput');
+  out.textContent = 'Design saved to design-corner.json';
+  out.classList.add('show');
+  setTimeout(() => out.classList.remove('show'), 3000);
+}
+
+function loadDesignFile() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        applyData(data);
+        saveToStorage();
+        const out = document.getElementById('cssOutput');
+        out.textContent = 'Design loaded from ' + file.name;
+        out.classList.add('show');
+        setTimeout(() => out.classList.remove('show'), 3000);
+      } catch(err) {
+        alert('Invalid design file: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// Auto-load design from file (for export script)
+async function tryLoadDesign() {
+  const basePath = getEventPath(currentEvent);
+  const candidates = [`${basePath}/design-corner.json`];
+  for (let i = 2; i <= 5; i++) candidates.push(`${basePath}/design-corner-v${i}.json`);
+
+  const results = await Promise.allSettled(
+    candidates.map(async name => {
+      const r = await fetch(name);
+      if (!r.ok) throw new Error();
+      const modified = r.headers.get('Last-Modified');
+      const mtime = modified ? new Date(modified).getTime() : 0;
+      const data = await r.json();
+      return { name, data, mtime };
+    })
+  );
+
+  const found = results
+    .filter(r => r.status === 'fulfilled')
+    .map(r => r.value)
+    .sort((a, b) => b.mtime - a.mtime);
+
+  if (found.length > 0) {
+    applyData(found[0].data);
+    console.log(`Loaded design: ${found[0].name}`);
+    return true;
+  }
+  return false;
+}
+
+/* ===== INIT ===== */
+(async () => {
+  await discoverEvents();
+  loadAssets(currentEvent);
+
+  const hasStorage = localStorage.getItem(STORAGE_KEY);
+  if (hasStorage) {
+    loadFromStorage();
+  } else {
+    await tryLoadDesign();
+  }
+})();
+</script>
+</body>
+</html>

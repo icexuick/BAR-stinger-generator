@@ -47,14 +47,15 @@ npm install
 
 ### 1. Preview & Edit in Browser
 
-Open `bar-stinger-alphacup-vi/stinger-v2-animated.html` in a browser. You can use VS Code's Live Server extension or any local server:
+Open `stinger.html` in a browser. You can use VS Code's Live Server extension or any local server:
 
 ```bash
 # Example with Python
-cd bar-stinger-alphacup-vi
 python -m http.server 8080
-# Open http://localhost:8080/stinger-v2-animated.html
+# Open http://localhost:8080/stinger.html
 ```
+
+Select an event from the **Event** dropdown in the editor to load its assets and design.
 
 #### Controls Bar
 
@@ -116,6 +117,7 @@ This will:
 node export-stinger.js [options]
 
 Options:
+  --event <name>        Event folder name (default: alphacup-vi)
   --fps <number>        Framerate (default: 60)
   --duration <number>   Duration in ms (default: from design.json, or 3000)
   --width <number>      Width in px (default: 2560)
@@ -147,7 +149,7 @@ Alternatively, use it as a **Stinger Transition**:
 
 A separate looped animation for showing the tournament logo in a corner of the livestream.
 
-Open `bar-stinger-alphacup-vi/logo-corner-anim.html` in a browser.
+Open `logo-corner.html` in a browser.
 
 Features:
 - Adjustable position and size (place anywhere on screen)
@@ -170,22 +172,34 @@ Uses `design-corner.json` for settings. Same export options as the stinger (`--f
 BAR-livestream-stinger/
 ├── README.md
 ├── package.json
+├── stinger.html                   # Stinger transition (open in browser)
+├── logo-corner.html               # Corner logo animation (open in browser)
 ├── export-stinger.js              # Stinger export script
 ├── export-corner.js               # Corner logo export script
-├── bar-stinger-alphacup-vi/
-│   ├── stinger-v1-simple.html     # Static version (no animation)
-│   ├── stinger-v2-animated.html   # Animated stinger with editor
-│   ├── logo-corner-anim.html      # Looped corner logo with editor
-│   ├── design.json                # Stinger editor settings
-│   ├── design-corner.json         # Corner logo editor settings
-│   └── assets/
-│       ├── shield.svg
-│       ├── bar-logo.svg
-│       ├── alpha.svg
-│       ├── alpha-vi.svg
-│       └── cup.svg
-└── stinger-*.webm                 # Exported videos (gitignored)
+├── events/                        # One folder per tournament/event
+│   ├── alphacup-vi/
+│   │   ├── assets/
+│   │   │   ├── shield.svg
+│   │   │   ├── bar-logo.svg
+│   │   │   ├── alpha.svg
+│   │   │   ├── alpha-vi.svg
+│   │   │   └── cup.svg
+│   │   ├── design.json            # Stinger editor settings
+│   │   └── design-corner.json     # Corner logo editor settings
+│   └── other-event/               # Add more events here
+│       ├── assets/
+│       └── design.json
+├── bar-stinger-alphacup-vi/       # Legacy (original files)
+└── *.webm                         # Exported videos (gitignored)
 ```
+
+### Adding a New Event
+
+1. Create a folder under `events/` with your event name (e.g. `events/my-tournament/`)
+2. Add an `assets/` subfolder with the SVG files: `shield.svg`, `bar-logo.svg`, `alpha.svg`, `alpha-vi.svg`, `cup.svg`
+3. Open `stinger.html` or `logo-corner.html` — select your event from the dropdown
+4. Customize the design and click **Save Design** — place the downloaded JSON in your event folder
+5. Export: `node export-stinger.js --event my-tournament`
 
 ## Tech Stack
 
