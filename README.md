@@ -143,17 +143,41 @@ Alternatively, use it as a **Stinger Transition**:
 2. Select the `.webm` file
 3. Set the transition point to match your animation timing
 
+### 4. Logo Corner Animation
+
+A separate looped animation for showing the tournament logo in a corner of the livestream.
+
+Open `bar-stinger-alphacup-vi/logo-corner-anim.html` in a browser.
+
+Features:
+- Adjustable position and size (place anywhere on screen)
+- Soft pulsing glow effect
+- Periodic light sweep / glint
+- 3D spin effect with per-layer depth (shield, BAR, ALPHA, αVI, CUP each at different Z-depths)
+- Adjustable loop duration (3–20 seconds)
+- Full editor with Save/Load Design support
+
+Export:
+```bash
+npm run export-corner
+```
+
+Uses `design-corner.json` for settings. Same export options as the stinger (`--fps`, `--duration`, `--width`, `--height`, `--design`).
+
 ## Project Structure
 
 ```
 BAR-livestream-stinger/
 ├── README.md
 ├── package.json
-├── export-stinger.js              # Puppeteer + FFmpeg export script
+├── export-stinger.js              # Stinger export script
+├── export-corner.js               # Corner logo export script
 ├── bar-stinger-alphacup-vi/
 │   ├── stinger-v1-simple.html     # Static version (no animation)
-│   ├── stinger-v2-animated.html   # Animated version with editor
-│   ├── design.json                # Saved editor settings
+│   ├── stinger-v2-animated.html   # Animated stinger with editor
+│   ├── logo-corner-anim.html      # Looped corner logo with editor
+│   ├── design.json                # Stinger editor settings
+│   ├── design-corner.json         # Corner logo editor settings
 │   └── assets/
 │       ├── shield.svg
 │       ├── bar-logo.svg
